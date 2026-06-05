@@ -6,538 +6,480 @@
 <title>Studio 21 · Asistente Virtual</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{height:100%}
 body{
   font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
   background:#0a0a0f;color:#fff;
   min-height:100vh;display:flex;flex-direction:column;align-items:center;
 }
-.header{
-  width:100%;max-width:480px;
-  padding:24px 20px 0;
-  display:flex;align-items:center;gap:14px;
-}
-.logo{
-  width:52px;height:52px;border-radius:14px;
-  background:linear-gradient(135deg,#d4a847,#8b5e1a);
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;flex-shrink:0;
-  box-shadow:0 4px 16px rgba(212,168,71,.4);
-}
-.brand h1{font-size:20px;font-weight:700;letter-spacing:-.2px}
-.brand p{font-size:12px;color:#64748b;margin-top:2px}
-.badge{
-  margin-left:auto;
-  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);
-  color:#4ade80;font-size:11px;font-weight:600;
-  padding:4px 10px;border-radius:999px;
-  display:flex;align-items:center;gap:5px;flex-shrink:0;
-}
-.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink .9s infinite}
-.card{width:100%;max-width:480px;padding:0 16px 28px;flex:1;display:flex;flex-direction:column;}
+/* ── header ── */
+.hdr{width:100%;max-width:480px;padding:22px 20px 0;display:flex;align-items:center;gap:12px}
+.logo{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#d4a847,#7c4f0e);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 4px 16px rgba(212,168,71,.4)}
+.brand h1{font-size:19px;font-weight:700}
+.brand p{font-size:11px;color:#64748b;margin-top:1px}
+.online{margin-left:auto;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.online::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;animation:bl .9s infinite}
 
-/* chat */
-.chat-wrap{
-  flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
-  border-radius:20px;margin:14px 0;padding:14px;
-  min-height:220px;max-height:300px;overflow-y:auto;
-  display:flex;flex-direction:column;gap:10px;
-}
-.chat-wrap::-webkit-scrollbar{width:3px}
-.chat-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
-.bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.55;animation:fadeUp .25s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.bubble.ai{background:rgba(212,168,71,.12);border:1px solid rgba(212,168,71,.2);color:#fde68a;align-self:flex-start;border-bottom-left-radius:4px}
-.bubble.ai .sender{font-size:10px;color:#d4a847;font-weight:600;margin-bottom:4px;letter-spacing:.3px}
-.bubble.user{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;align-self:flex-end;border-bottom-right-radius:4px}
-.typing{align-self:flex-start;background:rgba(212,168,71,.1);border:1px solid rgba(212,168,71,.15);border-radius:16px;border-bottom-left-radius:4px;padding:12px 16px;display:none;gap:5px;align-items:center}
-.typing.show{display:flex}
-.typing span{width:7px;height:7px;border-radius:50%;background:#d4a847;opacity:.4;animation:typedot 1.2s ease-in-out infinite}
-.typing span:nth-child(2){animation-delay:.2s}
-.typing span:nth-child(3){animation-delay:.4s}
-@keyframes typedot{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1.1)}}
+/* ── card ── */
+.card{width:100%;max-width:480px;padding:0 16px 24px;display:flex;flex-direction:column}
 
-/* statusbar */
-.statusbar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:13px;color:#94a3b8}
-.statusbar .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;transition:background .3s}
-.dot.yellow{background:#facc15!important;animation:blink .7s infinite}
-.dot.red{background:#f43f5e!important;animation:blink .7s infinite}
-.dot.blue{background:#60a5fa!important;animation:blink .7s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+/* ── chat ── */
+.chat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;margin:12px 0;padding:14px;min-height:200px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:9px}
+.chat::-webkit-scrollbar{width:3px}
+.chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.bbl{max-width:84%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.55;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.bbl.ai{background:rgba(212,168,71,.12);border:1px solid rgba(212,168,71,.18);color:#fde68a;align-self:flex-start;border-bottom-left-radius:3px}
+.bbl.ai b{display:block;font-size:9px;color:#d4a847;margin-bottom:3px;letter-spacing:.4px}
+.bbl.usr{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;align-self:flex-end;border-bottom-right-radius:3px}
+.dots{align-self:flex-start;background:rgba(212,168,71,.1);border:1px solid rgba(212,168,71,.15);border-radius:14px;border-bottom-left-radius:3px;padding:11px 15px;display:none;gap:5px;align-items:center}
+.dots.on{display:flex}
+.dots span{width:7px;height:7px;border-radius:50%;background:#d4a847;opacity:.4;animation:td 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1.1)}}
 
-/* call button */
-.btn-wrap{position:relative;width:156px;height:156px;margin:0 auto 18px}
-.ring{position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(212,168,71,.25);animation:ripple 2.4s ease-out infinite;opacity:0}
+/* ── status ── */
+.sbar{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:9px 15px;margin-bottom:12px;font-size:12px;color:#94a3b8}
+.sbar .d{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.d.g{background:#4ade80}
+.d.b{background:#60a5fa;animation:bl .7s infinite}
+.d.r{background:#f43f5e;animation:bl .7s infinite}
+.d.y{background:#facc15;animation:bl .7s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── call button ── */
+.bwrap{position:relative;width:152px;height:152px;margin:0 auto 16px}
+.ring{position:absolute;inset:-15px;border-radius:50%;border:2px solid rgba(212,168,71,.22);animation:rp 2.4s ease-out infinite;opacity:0}
 .ring:nth-child(2){animation-delay:.8s}.ring:nth-child(3){animation-delay:1.6s}
-@keyframes ripple{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.4);opacity:0}}
-.callbtn{
-  position:relative;z-index:2;width:156px;height:156px;border-radius:50%;border:none;
-  background:linear-gradient(135deg,#d4a847,#8b5e1a);cursor:pointer;
-  transition:transform .2s,box-shadow .2s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  box-shadow:0 8px 32px rgba(212,168,71,.45);outline:none;-webkit-tap-highlight-color:transparent;user-select:none;
+@keyframes rp{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.4);opacity:0}}
+.cbtn{
+  position:relative;z-index:2;width:152px;height:152px;border-radius:50%;border:none;
+  cursor:pointer;transition:transform .2s,box-shadow .2s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  outline:none;-webkit-tap-highlight-color:transparent;user-select:none;
+  background:linear-gradient(135deg,#d4a847,#8b5e1a);
+  box-shadow:0 8px 28px rgba(212,168,71,.4);
 }
-.callbtn:hover{transform:scale(1.05)}
-.callbtn:active{transform:scale(.96)}
-.callbtn.listening{background:linear-gradient(135deg,#f472b6,#c084fc);animation:pulse 1.5s ease-in-out infinite}
-.callbtn.speaking{background:linear-gradient(135deg,#818cf8,#6366f1)}
-.callbtn.hangup{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:0 8px 32px rgba(244,63,94,.5);animation:none}
-@keyframes pulse{0%,100%{box-shadow:0 8px 32px rgba(244,114,182,.4)}50%{box-shadow:0 8px 50px rgba(244,114,182,.8),0 0 0 20px rgba(244,114,182,.08)}}
-.callbtn .ico{font-size:46px;line-height:1}
-.callbtn .lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.6px;text-transform:uppercase}
-.waves{display:flex;gap:3px;align-items:center;justify-content:center;height:30px}
-.waves span{display:block;width:4px;border-radius:2px;background:#fff;animation:wave 1s ease-in-out infinite}
-.waves span:nth-child(1){height:10px}.waves span:nth-child(2){height:20px;animation-delay:.15s}
-.waves span:nth-child(3){height:28px;animation-delay:.3s}.waves span:nth-child(4){height:20px;animation-delay:.45s}
-.waves span:nth-child(5){height:10px;animation-delay:.6s}
-@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.cbtn:hover{transform:scale(1.05)}
+.cbtn:active{transform:scale(.96)}
+/* states applied via JS class on body */
+body.speaking .cbtn{background:linear-gradient(135deg,#818cf8,#6366f1);box-shadow:0 8px 28px rgba(129,140,248,.4);animation:none}
+body.listening .cbtn{background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 8px 28px rgba(236,72,153,.4);animation:plz 1.6s ease-in-out infinite}
+body.active .cbtn{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:0 8px 28px rgba(244,63,94,.45)}
+@keyframes plz{0%,100%{box-shadow:0 8px 28px rgba(236,72,153,.4)}50%{box-shadow:0 8px 44px rgba(236,72,153,.8),0 0 0 18px rgba(236,72,153,.07)}}
+.cbtn .ico{font-size:44px;line-height:1}
+.cbtn .lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:.7px;text-transform:uppercase}
+.waves{display:flex;gap:3px;align-items:center;justify-content:center;height:28px}
+.waves span{display:block;width:4px;border-radius:2px;background:#fff;animation:wv 1s ease-in-out infinite}
+.waves span:nth-child(1){height:9px}.waves span:nth-child(2){height:18px;animation-delay:.15s}
+.waves span:nth-child(3){height:26px;animation-delay:.3s}.waves span:nth-child(4){height:18px;animation-delay:.45s}
+.waves span:nth-child(5){height:9px;animation-delay:.6s}
+@keyframes wv{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 
-/* info + services */
-.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
-.pill{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:5px 13px;font-size:11px;color:#94a3b8}
-.services-panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px;display:none}
-.services-panel.show{display:block}
-.services-panel h3{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
-.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.svc{background:rgba(212,168,71,.06);border:1px solid rgba(212,168,71,.12);border-radius:10px;padding:9px 11px;cursor:pointer;transition:background .15s}
-.svc:hover{background:rgba(212,168,71,.14)}
-.svc .sn{font-size:12px;font-weight:600;color:#fde68a;margin-bottom:1px}
-.svc .sp{font-size:11px;color:#d4a847}.svc .sd{font-size:10px;color:#64748b}
+/* ── pills ── */
+.pills{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:14px}
+.pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:5px 12px;font-size:11px;color:#94a3b8}
+
+/* ── safari warning ── */
+.sw{display:none;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px 15px;font-size:13px;color:#fbbf24;line-height:1.6;text-align:center;margin-bottom:14px}
+
+/* ── services ── */
+.svcs{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:13px;display:none}
+.svcs.on{display:block}
+.svcs h3{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.svc{background:rgba(212,168,71,.05);border:1px solid rgba(212,168,71,.1);border-radius:10px;padding:9px 11px;cursor:pointer;transition:background .15s}
+.svc:hover,.svc:active{background:rgba(212,168,71,.15)}
+.sn{font-size:12px;font-weight:600;color:#fde68a;margin-bottom:1px}
+.sp{font-size:11px;color:#d4a847}.sd{font-size:10px;color:#64748b}
 </style>
 </head>
 <body>
 
-<div class="header">
+<div class="hdr">
   <div class="logo">✂️</div>
   <div class="brand"><h1>Studio 21</h1><p>Peluquería &amp; Barbería · Madrid</p></div>
-  <div class="badge">En línea</div>
+  <div class="online">En línea</div>
 </div>
 
 <div class="card">
-  <div class="chat-wrap" id="chatBox">
-    <div class="bubble ai">
-      <div class="sender">SOFIA · ASISTENTE</div>
-      ¡Hola! Soy Sofía. Puedo reservarte una cita, informarte sobre precios y servicios, o resolver cualquier duda. Pulsa el botón y habla conmigo 😊
-    </div>
-    <div class="typing" id="typing"><span></span><span></span><span></span></div>
+  <div class="chat" id="chat">
+    <div class="bbl ai"><b>SOFIA · ASISTENTE</b>¡Hola! Soy Sofía, asistente de Studio 21. Reservo citas, informo sobre precios y resuelvo dudas. ¡Pulsa el botón para empezar! 😊</div>
+    <div class="dots" id="dots"><span></span><span></span><span></span></div>
   </div>
 
-  <div class="statusbar">
-    <div class="dot" id="dot"></div>
-    <span id="stxt">Pulsa el botón y habla con Sofía</span>
-  </div>
+  <div class="sbar"><div class="d g" id="dot"></div><span id="stxt">Pulsa el botón y habla con Sofía</span></div>
 
-  <div class="btn-wrap">
+  <div class="bwrap">
     <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-    <button class="callbtn" id="callBtn" onclick="toggle()">
-      <span class="ico" id="ico">🎙️</span>
+    <button class="cbtn" id="cbtn" onclick="toggle()">
+      <span id="ico">🎙️</span>
       <span class="lbl" id="lbl">Llamar</span>
     </button>
   </div>
 
   <div class="pills">
-    <div class="pill">📍 Calle Gran Vía 21, Madrid</div>
+    <div class="pill">📍 Gran Vía 21, Madrid</div>
     <div class="pill">🕐 Lun–Vie 9–20h · Sáb 9–18h</div>
-    <div class="pill">📞 +34 912 345 678</div>
+    <div class="pill">📞 912 345 678</div>
   </div>
 
-  <div id="safari-warn" style="display:none;margin-bottom:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:13px 16px;font-size:13px;color:#fbbf24;line-height:1.6;text-align:center">
+  <div class="sw" id="sw">
     ⚠️ <strong>Safari no soporta reconocimiento de voz.</strong><br>
     Abre esta página en <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong>.
   </div>
 
-  <div class="services-panel" id="svcsPanel">
+  <div class="svcs" id="svcs">
     <h3>Servicios — pulsa para seleccionar</h3>
-    <div class="svc-grid" id="svcGrid"></div>
+    <div class="sgrid" id="sgrid"></div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  CATÁLOGO
-// ══════════════════════════════════════════════════
-const CATALOG = [
-  {id:"corte_mujer",  name:"Corte mujer",       price:"28€", dur:"35 min", keys:["corte mujer","pelo mujer","mujer"]},
-  {id:"corte_hombre", name:"Corte hombre",       price:"18€", dur:"25 min", keys:["corte hombre","pelo hombre","hombre","chico"]},
-  {id:"corte_nino",   name:"Corte niño/niña",    price:"12€", dur:"20 min", keys:["niño","niña","infantil","peque"]},
-  {id:"lavado",       name:"Lavado + Corte",      price:"35€", dur:"50 min", keys:["lavado","lavar"]},
-  {id:"tinte",        name:"Tinte completo",      price:"65€", dur:"90 min", keys:["tinte","teñir","color","coloración"]},
-  {id:"mechas",       name:"Mechas / Balayage",   price:"90€", dur:"2h",     keys:["mechas","balayage","highlights","luces","reflejos"]},
-  {id:"permanente",   name:"Permanente",          price:"75€", dur:"2h",     keys:["permanente","rizo","ondas","rizado"]},
-  {id:"tratamiento",  name:"Tratamiento capilar", price:"45€", dur:"60 min", keys:["tratamiento","hidratación","keratina","brillo"]},
-  {id:"barba",        name:"Arreglo de barba",    price:"12€", dur:"20 min", keys:["barba","arreglo barba"]},
-  {id:"navaja",       name:"Afeitado navaja",     price:"20€", dur:"30 min", keys:["navaja","afeitado","clásico"]},
-  {id:"corte_barba",  name:"Corte + Barba",       price:"28€", dur:"45 min", keys:["corte y barba","corte con barba"]},
-  {id:"peinado",      name:"Peinado / Recogido",  price:"35€", dur:"45 min", keys:["peinado","recogido","moño","evento","novia"]},
+// ══ CATÁLOGO ═══════════════════════════════════════════════
+const CAT = [
+  {id:"cm",  n:"Corte mujer",       p:"28€", d:"35 min", k:["mujer","corte de mujer","pelo mujer"]},
+  {id:"ch",  n:"Corte hombre",      p:"18€", d:"25 min", k:["hombre","corte de hombre","chico","pelo hombre"]},
+  {id:"cn",  n:"Corte niño/niña",   p:"12€", d:"20 min", k:["niño","niña","infantil","peque","pequeño"]},
+  {id:"lc",  n:"Lavado + Corte",    p:"35€", d:"50 min", k:["lavado","lavar","lavado y corte"]},
+  {id:"ti",  n:"Tinte completo",    p:"65€", d:"90 min", k:["tinte","teñir","color","coloración","teño"]},
+  {id:"me",  n:"Mechas/Balayage",   p:"90€", d:"2 h",    k:["mechas","balayage","highlights","luces","reflejos"]},
+  {id:"pe",  n:"Permanente",        p:"75€", d:"2 h",    k:["permanente","rizo","ondas","rizado"]},
+  {id:"tr",  n:"Tratamiento",       p:"45€", d:"60 min", k:["tratamiento","keratina","hidratación","brillo"]},
+  {id:"ba",  n:"Arreglo barba",     p:"12€", d:"20 min", k:["barba","arreglo de barba","solo barba"]},
+  {id:"na",  n:"Afeitado navaja",   p:"20€", d:"30 min", k:["navaja","afeitado clásico","afeitar"]},
+  {id:"cb",  n:"Corte + Barba",     p:"28€", d:"45 min", k:["corte y barba","corte con barba","corte barba"]},
+  {id:"po",  n:"Peinado/Recogido",  p:"35€", d:"45 min", k:["peinado","recogido","moño","evento","novia"]},
 ];
 
 const FAQ = {
-  precio:    "Nuestros precios van desde 12 euros el corte de niño hasta 90 euros las mechas o balayage. ¿Quieres que te cuente el precio de un servicio concreto?",
-  horario:   "Abrimos de lunes a viernes de 9 a 20 horas, y los sábados de 9 a 18 horas. Los domingos descansamos.",
-  ubicacion: "Estamos en Calle Gran Vía 21, Madrid, muy cerca del metro Gran Vía. ¿Quieres que te dé más indicaciones?",
-  parking:   "Hay parking público a 50 metros en Calle Montera, y zona de aparcamiento regulado en los alrededores.",
-  equipo:    "Nuestro equipo lo forman cinco estilistas especializados en corte moderno, coloración y barbería clásica, todos con más de cinco años de experiencia.",
-  cancelar:  "Puedes cancelar hasta dos horas antes sin coste. Solo llama al 912 345 678 o responde al SMS de confirmación.",
-  productos: "Trabajamos con Kerastase, Wella Professionals y American Crew para barbería. También los vendemos en el salón.",
+  precio:    "Los precios van de 12 euros el corte de niño, a 90 euros las mechas. ¿Te cuento el precio de algún servicio?",
+  horario:   "Abrimos lunes a viernes de 9 a 20 horas, y sábados de 9 a 18. Los domingos cerramos.",
+  ubicacion: "Estamos en Gran Vía 21, Madrid, metro Gran Vía. ¿Necesitas más indicaciones?",
+  parking:   "Hay parking público a 50 metros, en Calle Montera.",
+  equipo:    "Somos cinco estilistas especializados en corte, coloración y barbería clásica.",
+  cancelar:  "Puedes cancelar hasta 2 horas antes sin coste, llamando al 912 345 678.",
+  productos: "Trabajamos con Kérastase, Wella Professionals y American Crew.",
 };
 
-// ══════════════════════════════════════════════════
-//  ESTADO
-// ══════════════════════════════════════════════════
-const S = {MENU:"menu",SERVICE:"service",DAY:"day",TIME:"time",NAME:"name",PHONE:"phone",CONFIRM:"confirm",DONE:"done"};
-let step = S.MENU;
-let booking = {};
-let sessionActive = false;
-let callStarted = false;
-let isSpeaking = false;
-let speakId = 0;          // invalida callbacks de speak() anteriores
+// ══ ESTADO ═════════════════════════════════════════════════
+const S = {IDLE:"idle",SVC:"svc",DAY:"day",TIME:"time",NAME:"name",PHONE:"phone",CONFIRM:"confirm",DONE:"done"};
+let step = S.IDLE;
+let bk = {};            // booking
+let active = false;
+let started = false;
+let speaking = false;
+let sid = 0;            // speak-id: invalida callbacks viejos
 let recog = null;
-let silenceTimer = null;
-let listenTimer = null;
-let synthResume = null;
+let tSilence = null;
+let tListen = null;
+let tResume = null;
 
-// ══════════════════════════════════════════════════
-//  VOCES — esperar a que carguen
-// ══════════════════════════════════════════════════
-let voices = [];
-function loadVoices(){ voices = speechSynthesis.getVoices(); }
-loadVoices();
-speechSynthesis.onvoiceschanged = loadVoices;
+// ══ VOCES ══════════════════════════════════════════════════
+let vox = [];
+const loadVox = () => { vox = speechSynthesis.getVoices(); };
+loadVox();
+if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVox;
 
-function bestVoice(){
-  // Preferencia: Google español > online española > cualquier es-ES > cualquier es
-  return voices.find(v=> v.lang.startsWith("es") && /google/i.test(v.name))
-      || voices.find(v=> v.lang.startsWith("es") && !v.localService)
-      || voices.find(v=> v.lang==="es-ES")
-      || voices.find(v=> v.lang.startsWith("es"))
+function bestVox() {
+  if (!vox.length) loadVox();
+  return vox.find(v => v.lang.startsWith("es") && /google/i.test(v.name))
+      || vox.find(v => v.lang.startsWith("es") && !v.localService)
+      || vox.find(v => v.lang === "es-ES")
+      || vox.find(v => v.lang.startsWith("es"))
       || null;
 }
 
-// ══════════════════════════════════════════════════
-//  TTS — síntesis nativa (Chrome la coordina con mic)
-// ══════════════════════════════════════════════════
+// ══ TTS ════════════════════════════════════════════════════
+function say(text, then) {
+  if (!active) return;
 
-// Chrome bug: frases largas se cortan. Dividir en oraciones.
-function splitSentences(text){
-  return text.match(/[^.!?]+[.!?]*/g)?.map(s=>s.trim()).filter(Boolean) || [text];
-}
+  killListen();
+  speaking = true;
+  const myId = ++sid;
 
-function speak(text, onDone){
-  if(!sessionActive) return;
-  stopListening();
-  isSpeaking = true;
-  const myId = ++speakId;   // este ciclo solo responde a su propio id
-  showWaves(true);
-  setStatus("blue","Sofía está hablando...");
-  setBtn("speaking");
-  showTyping(false);
-  addBubble("ai", text);
+  ui("b", "Sofía está hablando...");
+  setState("speaking");
+  showDots(false);
+  addMsg("ai", text);
 
+  // Cancelar síntesis anterior y esperar un tick (fix Chrome)
   speechSynthesis.cancel();
-  clearInterval(synthResume);
+  clearInterval(tResume);
 
-  const sentences = splitSentences(text);
-  let idx = 0;
+  setTimeout(() => {
+    if (myId !== sid) return;   // otro say() ya arrancó
 
-  synthResume = setInterval(()=>{ if(speechSynthesis.paused) speechSynthesis.resume(); }, 3000);
-
-  // Fallback: si onend no dispara, arranca mic después de duración estimada + buffer
-  const estMs = Math.max(2500, (text.length / 12) * 1000 + 1500);
-  const fallbackTimer = setTimeout(()=>{
-    if(myId===speakId && isSpeaking){ speakId++; isSpeaking=false; showWaves(false); clearInterval(synthResume); if(sessionActive&&step!==S.DONE) listenTimer=setTimeout(startListening,500); }
-  }, estMs);
-
-  function speakNext(){
-    if(myId !== speakId) return;   // otro speak() ya tomó el control
-    if(idx >= sentences.length){
-      clearTimeout(fallbackTimer);
-      clearInterval(synthResume);
-      isSpeaking = false;
-      showWaves(false);
-      if(typeof onDone==="function"){ onDone(); return; }
-      if(sessionActive && step!==S.DONE){
-        listenTimer = setTimeout(startListening, 700);
-      }
-      return;
-    }
-    const u = new SpeechSynthesisUtterance(sentences[idx++]);
+    const u = new SpeechSynthesisUtterance(text);
     u.lang  = "es-ES";
-    u.rate  = 0.92;
-    u.pitch = 1.08;
-    const v = bestVoice();
-    if(v) u.voice = v;
-    u.onend   = () => speakNext();
-    u.onerror = (e) => { if(e.error!=="canceled"&&e.error!=="interrupted") speakNext(); };
+    u.rate  = 0.9;
+    u.pitch = 1.05;
+    const v = bestVox();
+    if (v) u.voice = v;
+
+    // Duración estimada: ~11 chars/s + 1s buffer
+    const ms = Math.max(1800, (text.length / 11) * 1000 + 1000);
+    let done = false;
+
+    function finish() {
+      if (done || myId !== sid) return;
+      done = true;
+      clearInterval(tResume);
+      speaking = false;
+      showWaves(false);
+      if (typeof then === "function") { then(); return; }
+      if (active && step !== S.DONE) tListen = setTimeout(startListen, 600);
+    }
+
+    // Fallback por si onend no dispara
+    const fb = setTimeout(finish, ms);
+
+    u.onend   = () => { clearTimeout(fb); finish(); };
+    u.onerror = (e) => { if (e.error !== "canceled" && e.error !== "interrupted") { clearTimeout(fb); finish(); } };
+
+    // Fix Chrome: pausa al cambiar de pestaña
+    tResume = setInterval(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 4000);
+
     speechSynthesis.speak(u);
-  }
-  speakNext();
+    showWaves(true);
+  }, 80);  // 80ms tras cancel() — necesario en Chrome
 }
 
-// ══════════════════════════════════════════════════
-//  STT
-// ══════════════════════════════════════════════════
-function stopListening(){
-  clearTimeout(silenceTimer);
-  clearTimeout(listenTimer);
-  if(recog){ try{ recog.abort(); }catch(e){} recog=null; }
+// ══ STT ════════════════════════════════════════════════════
+function killListen() {
+  clearTimeout(tSilence);
+  clearTimeout(tListen);
+  if (recog) { try { recog.abort(); } catch(e) {} recog = null; }
 }
 
-function startListening(){
-  if(!sessionActive || isSpeaking) return;
+function startListen() {
+  if (!active || speaking) return;
   const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!R) return;
+  if (!R) return;
 
-  stopListening();
+  killListen();
 
-  recog = new R();
-  recog.lang = "es-ES";
-  recog.continuous = false;
-  recog.interimResults = false;
-  recog.maxAlternatives = 5;
+  const r = new R();
+  r.lang = "es-ES";
+  r.continuous = false;
+  r.interimResults = false;
+  r.maxAlternatives = 5;
+  recog = r;
 
-  let gotResult = false;
+  let got = false;
 
-  recog.onstart = ()=>{
-    setBtn("listening");
-    setStatus("red","Escuchando — habla ahora...");
-    silenceTimer = setTimeout(()=>{
-      if(sessionActive && !isSpeaking) speak(reprompt());
+  r.onstart = () => {
+    setState("listening");
+    ui("r", "Escuchando — habla ahora...");
+    tSilence = setTimeout(() => {
+      if (active && !speaking) say(reprompt());
     }, 9000);
   };
 
-  recog.onresult = (e)=>{
-    clearTimeout(silenceTimer);
-    gotResult = true;
-    const raw = Array.from(e.results).map(r=>r[0].transcript).join(" ").trim().toLowerCase();
-    const text = w2d(raw);
-    addBubble("user", raw);
-    showTyping(true);
-    setTimeout(()=> processInput(text), 350);
+  r.onresult = (e) => {
+    clearTimeout(tSilence);
+    got = true;
+    const raw = Array.from(e.results).map(x => x[0].transcript).join(" ").trim().toLowerCase();
+    addMsg("usr", raw);
+    showDots(true);
+    setTimeout(() => process(n2d(raw)), 400);
   };
 
-  recog.onerror = (e)=>{
-    clearTimeout(silenceTimer);
-    if(!sessionActive) return;
-    if(e.error==="no-speech"){ listenTimer=setTimeout(startListening,300); return; }
-    if(e.error==="aborted"||e.error==="interrupted") return;
-    setStatus("yellow","No te escuché, repite...");
-    listenTimer=setTimeout(startListening,1000);
+  r.onerror = (e) => {
+    clearTimeout(tSilence);
+    if (!active) return;
+    if (e.error === "no-speech")                              { tListen = setTimeout(startListen, 300); return; }
+    if (e.error === "aborted" || e.error === "interrupted")   return;
+    ui("y", "No te escuché, inténtalo de nuevo...");
+    tListen = setTimeout(startListen, 1200);
   };
 
-  recog.onend = ()=>{
-    clearTimeout(silenceTimer);
-    if(gotResult) return; // ya procesamos → speak() se encarga de relanzar
-    if(sessionActive && !isSpeaking && step!==S.DONE){
-      listenTimer=setTimeout(startListening,400);
-    }
+  r.onend = () => {
+    clearTimeout(tSilence);
+    if (got) return;
+    if (active && !speaking && step !== S.DONE) tListen = setTimeout(startListen, 400);
   };
 
-  try{ recog.start(); }
-  catch(e){ listenTimer=setTimeout(startListening,800); }
+  try { r.start(); }
+  catch(e) { tListen = setTimeout(startListen, 800); }
 }
 
-// ══════════════════════════════════════════════════
-//  NÚMERO PALABRAS → DÍGITOS
-// ══════════════════════════════════════════════════
-const NW={cero:0,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,"dieciséis":16,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20};
-function w2d(s){ return s.split(/\s+/).map(w=>{ const n=NW[w]; return n!==undefined?String(n):w; }).join(" "); }
+// ══ NÚMEROS ════════════════════════════════════════════════
+const NW = {cero:0,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,"dieciséis":16,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20};
+function n2d(s) { return s.split(/\s+/).map(w => NW[w] !== undefined ? String(NW[w]) : w).join(" "); }
 
-// ══════════════════════════════════════════════════
-//  CONVERSACIÓN
-// ══════════════════════════════════════════════════
-function processInput(text){
-  // FAQ global — funciona en cualquier paso
-  if(/precio|cuánto|cuanto|tarifa/i.test(text))           return speak(FAQ.precio);
-  if(/horario|cuándo abr|cuando abr|días|a qué hora abr/i.test(text)) return speak(FAQ.horario);
-  if(/dónde|donde|ubicación|dirección|cómo llego|como llego/i.test(text)) return speak(FAQ.ubicacion);
-  if(/parking|aparcar|aparcamiento/i.test(text))          return speak(FAQ.parking);
-  if(/equipo|estilista|quién trabaja|quien trabaja/i.test(text)) return speak(FAQ.equipo);
-  if(/cancelar|anular|cambiar cita/i.test(text))          return speak(FAQ.cancelar);
-  if(/producto|marca|kerastase|wella/i.test(text))        return speak(FAQ.productos);
+// ══ CONVERSACIÓN ═══════════════════════════════════════════
+function process(t) {
+  // FAQ global
+  if (/precio|cuánto|cuanto|tarifa/i.test(t))                        return say(FAQ.precio);
+  if (/horario|cuándo abr|cuando abr|qué días|que dias/i.test(t))    return say(FAQ.horario);
+  if (/dónde|donde|ubicac|direcc|cómo llego|como llego/i.test(t))    return say(FAQ.ubicacion);
+  if (/parking|aparcar|aparcamiento/i.test(t))                       return say(FAQ.parking);
+  if (/equipo|estilista|quién trabaja|quien trabaja/i.test(t))       return say(FAQ.equipo);
+  if (/cancelar|anular|cambiar cita/i.test(t))                       return say(FAQ.cancelar);
+  if (/producto|kerastase|wella|marca/i.test(t))                     return say(FAQ.productos);
 
-  if(step===S.MENU||step===S.SERVICE) return handleService(text);
-  if(step===S.DAY)     return handleDay(text);
-  if(step===S.TIME)    return handleTime(text);
-  if(step===S.NAME)    return handleName(text);
-  if(step===S.PHONE)   return handlePhone(text);
-  if(step===S.CONFIRM) return handleConfirm(text);
+  if (step === S.IDLE || step === S.SVC) return doSvc(t);
+  if (step === S.DAY)                    return doDay(t);
+  if (step === S.TIME)                   return doTime(t);
+  if (step === S.NAME)                   return doName(t);
+  if (step === S.PHONE)                  return doPhone(t);
+  if (step === S.CONFIRM)                return doConfirm(t);
 }
 
-function handleService(text){
-  for(const svc of CATALOG){
-    for(const key of svc.keys){
-      if(text.includes(key)){
-        booking.service = svc;
-        step = S.DAY;
-        speak(`Perfecto, ${svc.name} cuesta ${svc.price} y dura ${svc.dur}. ¿Para qué día quieres la cita?`);
-        hlSvc(svc.id);
-        return;
-      }
+function doSvc(t) {
+  for (const s of CAT)
+    for (const k of s.k)
+      if (t.includes(k)) { bk.svc = s; step = S.DAY; hlSvc(s.id); return say(`Perfecto, ${s.n} cuesta ${s.p} y dura ${s.d}. ¿Para qué día quieres la cita?`); }
+  if (/cita|reservar|pedir|quiero/i.test(t))
+    return say("Con mucho gusto. ¿Qué servicio te interesa? Corte de mujer u hombre, tinte, mechas, barba, peinado o tratamiento.");
+  say("¿Qué servicio deseas? Puedes decírmelo o pulsarlo en la pantalla.");
+}
+
+function doDay(t) {
+  const map = {lunes:"lunes",martes:"martes","miércoles":"miércoles",miercoles:"miércoles",jueves:"jueves",viernes:"viernes","sábado":"sábado",sabado:"sábado","mañana":"mañana",hoy:"hoy",pasado:"pasado mañana"};
+  for (const [k,v] of Object.entries(map))
+    if (t.includes(k)) { bk.day = v; step = S.TIME; return say(`El ${v}, perfecto. ¿A qué hora te viene mejor?`); }
+  const m = t.match(/(\d{1,2})/);
+  if (m && +m[1] >= 1 && +m[1] <= 31) { bk.day = `el día ${m[1]}`; step = S.TIME; return say(`El día ${m[1]}, anotado. ¿A qué hora?`); }
+  say("¿Para qué día quieres la cita? Lunes, martes, miércoles, jueves, viernes o sábado.");
+}
+
+function doTime(t) {
+  const m = t.match(/(\d{1,2})(?:[:\s](\d{2}))?/);
+  if (m) {
+    let h = +m[1], min = m[2] || "00";
+    if (/tarde|noche/.test(t) && h < 7) h += 12;
+    if (/y media/.test(t))      min = "30";
+    if (/y cuarto/.test(t))     min = "15";
+    if (/menos cuarto/.test(t)) { h -= 1; min = "45"; }
+    if (h >= 9 && h <= 20) {
+      bk.time = `${String(h).padStart(2,"0")}:${min}`;
+      step = S.NAME;
+      return say(`A las ${bk.time}. ¿Me dices tu nombre completo?`);
     }
   }
-  if(/cita|reservar|pedir|apuntar|quiero/i.test(text)){
-    speak("Claro, con mucho gusto. ¿Qué servicio te interesa? Tenemos corte de mujer y hombre, tinte, mechas, balayage, arreglo de barba, afeitado con navaja, peinado y tratamientos capilares.");
-    return;
+  say("Nuestro horario es de 9 a 20 de lunes a viernes, y de 9 a 18 los sábados. ¿Qué hora prefieres?");
+}
+
+function doName(t) {
+  const stop = ["me llamo","soy","mi nombre es","llamo","nombre","se llama"];
+  let n = t;
+  stop.forEach(s => { n = n.replace(new RegExp("\\b" + s + "\\b", "gi"), ""); });
+  n = n.trim().split(/\s+/).filter(w => w.length > 1).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  if (n.length > 1) { bk.name = n; step = S.PHONE; return say(`Encantada, ${n.split(" ")[0]}. ¿Y tu teléfono para enviarte la confirmación?`); }
+  say("¿Me puedes decir tu nombre, por favor?");
+}
+
+function doPhone(t) {
+  const d = t.replace(/\D/g,"");
+  if (d.length >= 9) {
+    bk.phone = d.slice(-9).replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3");
+    step = S.CONFIRM;
+    return say(`Perfecto. Te confirmo: ${summ()}. ¿Todo correcto?`);
   }
-  speak("¿Qué servicio te gustaría? Puedes decirme el nombre o pulsarlo en pantalla.");
+  say("No he captado bien el número. ¿Me lo repites despacio, dígito a dígito?");
 }
 
-function handleDay(text){
-  const map={lunes:"lunes",martes:"martes","miércoles":"miércoles",miercoles:"miércoles",jueves:"jueves",viernes:"viernes","sábado":"sábado",sabado:"sábado","mañana":"mañana",hoy:"hoy",pasado:"pasado mañana"};
-  for(const [k,v] of Object.entries(map)){
-    if(text.includes(k)){ booking.day=v; step=S.TIME; speak(`El ${v}, perfecto. ¿A qué hora te viene mejor?`); return; }
+function doConfirm(t) {
+  if (/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|confirmo|ok|adelante|genial)\b/.test(t)) {
+    step = S.DONE;
+    return say(`¡Listo! Cita confirmada en Studio 21. Te mandamos SMS al ${bk.phone} con los detalles y recordatorio 1 hora antes. ¡Hasta pronto, ${bk.name.split(" ")[0]}!`, () => setTimeout(endCall, 3000));
   }
-  const m=text.match(/(\d{1,2})/);
-  if(m&&+m[1]>=1&&+m[1]<=31){ booking.day=`el día ${m[1]}`; step=S.TIME; speak(`El día ${m[1]}, anotado. ¿A qué hora?`); return; }
-  speak("¿Para qué día quieres la cita? Puedes decir lunes, martes, miércoles, jueves, viernes o sábado.");
+  if (/\b(no|mal|cambia|error|equivocado)\b/.test(t)) { bk = {}; step = S.SVC; return say("Sin problema, empezamos de nuevo. ¿Qué servicio deseas?"); }
+  say(`Te confirmo: ${summ()}. Di sí para confirmar o no para corregir.`);
 }
 
-function handleTime(text){
-  const m=text.match(/(\d{1,2})(?:[:\s](\d{2}))?/);
-  if(m){
-    let h=+m[1], min=m[2]||"00";
-    if(/tarde|noche/.test(text)&&h<7) h+=12;
-    if(/y media/.test(text)) min="30";
-    if(/y cuarto/.test(text)) min="15";
-    if(/menos cuarto/.test(text)){ h-=1; min="45"; }
-    if(h>=9&&h<=20){
-      booking.time=`${String(h).padStart(2,"0")}:${min}`;
-      step=S.NAME;
-      speak(`A las ${booking.time}. ¿Me dices tu nombre completo para la reserva?`);
-      return;
-    }
-  }
-  speak("Nuestro horario es de 9 a 20 horas de lunes a viernes, y de 9 a 18 los sábados. ¿Qué hora te viene bien?");
+function summ() { return `${bk.svc?.n} el ${bk.day} a las ${bk.time}, a nombre de ${bk.name}, teléfono ${bk.phone}`; }
+
+function reprompt() {
+  return ({[S.SVC]:"¿Qué servicio deseas?",[S.DAY]:"¿Para qué día quieres la cita?",[S.TIME]:"¿A qué hora te viene mejor?",[S.NAME]:"¿Me puedes decir tu nombre?",[S.PHONE]:"¿Cuál es tu teléfono?",[S.CONFIRM]:`¿Confirmo: ${summ()}?`})[step] || "¿En qué puedo ayudarte?";
 }
 
-function handleName(text){
-  const stop=["me llamo","soy","mi nombre es","llamo","nombre","es","se llama"];
-  let name=text;
-  stop.forEach(s=>{ name=name.replace(new RegExp("\\b"+s+"\\b","gi"),""); });
-  name=name.trim().split(/\s+/).filter(w=>w.length>1).map(w=>w[0].toUpperCase()+w.slice(1)).join(" ");
-  if(name.length>1){
-    booking.name=name;
-    step=S.PHONE;
-    speak(`Encantada, ${name.split(" ")[0]}. ¿Y tu número de teléfono para mandarte la confirmación y el recordatorio?`);
-  } else {
-    speak("¿Me puedes decir tu nombre, por favor?");
-  }
-}
-
-function handlePhone(text){
-  const digits=text.replace(/\D/g,"");
-  if(digits.length>=9){
-    const raw=digits.slice(-9);
-    booking.phone=raw.replace(/(\d{3})(\d{3})(\d{3})/,"$1 $2 $3");
-    step=S.CONFIRM;
-    speak(`Perfecto. Entonces reservo: ${summary()}. ¿Todo correcto?`);
-  } else {
-    speak("No he captado bien el número. ¿Me lo repites despacio?");
-  }
-}
-
-function handleConfirm(text){
-  if(/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|eso|confirmo|ok|adelante|genial)\b/.test(text)){
-    step=S.DONE;
-    speak(`¡Listo! Tu cita en Studio 21 está confirmada. Te mandamos un SMS al ${booking.phone} con los detalles, y otro recordatorio una hora antes. ¡Hasta pronto, ${booking.name.split(" ")[0]}!`,
-      ()=>setTimeout(endCall,2800));
-  } else if(/\b(no|mal|cambia|error|equivocado)\b/.test(text)){
-    booking={}; step=S.SERVICE;
-    speak("Sin problema, empezamos de nuevo. ¿Qué servicio te gustaría reservar?");
-  } else {
-    speak(`Te confirmo: ${summary()}. Di sí para confirmar o no para corregir algo.`);
-  }
-}
-
-function summary(){ return `${booking.service?.name} el ${booking.day} a las ${booking.time}, a nombre de ${booking.name}, teléfono ${booking.phone}`; }
-
-function reprompt(){
-  const r={[S.SERVICE]:"¿Qué servicio te gustaría?",[S.DAY]:"¿Para qué día quieres la cita?",[S.TIME]:"¿A qué hora te viene mejor?",[S.NAME]:"¿Me puedes decir tu nombre?",[S.PHONE]:"¿Cuál es tu número de teléfono?",[S.CONFIRM]:`Entonces: ${summary()}. ¿Confirmo?`};
-  return r[step]||"¿En qué puedo ayudarte?";
-}
-
-// ══════════════════════════════════════════════════
-//  CONTROL LLAMADA
-// ══════════════════════════════════════════════════
-function toggle(){ sessionActive?endCall():startCall(); }
-
+// ══ LLAMADA ════════════════════════════════════════════════
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+if (isSafari) document.getElementById("sw").style.display = "block";
 
-// Mostrar aviso Safari al cargar
-if(isSafari) document.getElementById("safari-warn").style.display="block";
+function toggle() { active ? endCall() : startCall(); }
 
-function startCall(){
-  if(callStarted) return;
-  if(isSafari){
-    document.getElementById("safari-warn").style.display="block";
-    document.getElementById("safari-warn").scrollIntoView({behavior:"smooth"});
-    return;
-  }
-  const R=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!R){ alert("Usa Google Chrome o Microsoft Edge. Tu navegador no soporta reconocimiento de voz."); return; }
-  callStarted=true; sessionActive=true;
-  booking={}; step=S.MENU;
-  document.getElementById("callBtn").className="callbtn hangup";
-  document.getElementById("ico").textContent="⏹️";
-  document.getElementById("lbl").textContent="Colgar";
-  document.getElementById("svcsPanel").classList.add("show");
-  renderServices();
-  // Esperar voces cargadas antes de hablar
-  const go=()=> speak("¡Hola! Bienvenido a Studio 21. Soy Sofía. Puedo reservarte una cita, informarte sobre precios y servicios, o resolver cualquier duda. ¿En qué te ayudo?");
-  if(voices.length) go(); else { loadVoices(); setTimeout(go,500); }
+function startCall() {
+  if (started) return;
+  if (isSafari) { document.getElementById("sw").style.display = "block"; document.getElementById("sw").scrollIntoView({behavior:"smooth"}); return; }
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R) { alert("Usa Google Chrome o Edge. Tu navegador no soporta reconocimiento de voz."); return; }
+
+  started = true; active = true;
+  bk = {}; step = S.SVC;
+  document.getElementById("ico").textContent = "⏹️";
+  document.getElementById("lbl").textContent = "Colgar";
+  document.getElementById("svcs").classList.add("on");
+  document.body.classList.add("active");
+  renderSvcs();
+
+  // Esperar a que las voces carguen (primera vez en Chrome)
+  const go = () => say("¡Hola! Bienvenido a Studio 21. Soy Sofía. Dime qué servicio deseas o pulsa uno de la lista.");
+  if (vox.length) go(); else setTimeout(go, 600);
 }
 
-function endCall(){
-  sessionActive=false; callStarted=false;
-  clearTimeout(silenceTimer); clearTimeout(listenTimer); clearInterval(synthResume);
+function endCall() {
+  active = false; started = false; speaking = false;
+  killListen();
+  clearInterval(tResume);
   speechSynthesis.cancel();
-  if(recog){ try{ recog.abort(); }catch(e){} recog=null; }
-  isSpeaking=false; showWaves(false); showTyping(false);
-  document.getElementById("callBtn").className="callbtn";
-  document.getElementById("ico").textContent="🎙️";
-  document.getElementById("lbl").textContent="Llamar";
-  setStatus("green", step===S.DONE?"¡Cita reservada! ✓":"Llamada finalizada · Pulsa para volver a llamar");
-  step=S.MENU;
+  showWaves(false); showDots(false);
+  setState("idle");
+  document.getElementById("ico").textContent = "🎙️";
+  document.getElementById("lbl").textContent = "Llamar";
+  ui("g", step === S.DONE ? "¡Cita reservada! ✓" : "Llamada finalizada · Pulsa para llamar de nuevo");
+  step = S.IDLE;
 }
 
-// ══════════════════════════════════════════════════
-//  UI
-// ══════════════════════════════════════════════════
-function setStatus(color,text){
-  document.getElementById("dot").className="dot "+color;
-  document.getElementById("stxt").textContent=text;
+// ══ UI ══════════════════════════════════════════════════════
+function setState(s) {
+  document.body.classList.remove("speaking","listening","active");
+  if (s && s !== "idle") document.body.classList.add(s);
+  if (active) document.body.classList.add("active");
 }
-function setBtn(state){
-  const b=document.getElementById("callBtn");
-  b.className="callbtn hangup "+(state||"");
+function ui(c, t) {
+  document.getElementById("dot").className = "d " + c;
+  document.getElementById("stxt").textContent = t;
 }
-function addBubble(role,text){
-  const box=document.getElementById("chatBox");
-  const typing=document.getElementById("typing");
-  const el=document.createElement("div");
-  el.className="bubble "+role;
-  el.innerHTML=role==="ai"?`<div class="sender">SOFIA · ASISTENTE</div>${text.replace(/&/g,"&amp;").replace(/</g,"&lt;")}`:text.replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  box.insertBefore(el,typing);
-  box.scrollTop=box.scrollHeight;
+function addMsg(role, text) {
+  const box = document.getElementById("chat");
+  const dots = document.getElementById("dots");
+  const el = document.createElement("div");
+  el.className = "bbl " + role;
+  const safe = text.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  el.innerHTML = role === "ai" ? `<b>SOFIA · ASISTENTE</b>${safe}` : safe;
+  box.insertBefore(el, dots);
+  box.scrollTop = box.scrollHeight;
 }
-function showTyping(on){ const t=document.getElementById("typing"); t.className=on?"typing show":"typing"; if(on){ document.getElementById("chatBox").scrollTop=9999; } }
-function showWaves(on){ const ico=document.getElementById("ico"); if(on) ico.innerHTML=`<div class="waves"><span></span><span></span><span></span><span></span><span></span></div>`; else ico.textContent=sessionActive?"⏹️":"🎙️"; }
-
-function renderServices(){
-  document.getElementById("svcGrid").innerHTML=CATALOG.map(s=>`<div class="svc" id="svc_${s.id}" onclick="selectSvc('${s.id}')"><div class="sn">${s.name}</div><div class="sp">${s.price}</div><div class="sd">${s.dur}</div></div>`).join("");
+function showDots(on) {
+  const d = document.getElementById("dots");
+  d.className = on ? "dots on" : "dots";
+  if (on) document.getElementById("chat").scrollTop = 9999;
 }
-function selectSvc(id){
-  if(!sessionActive||(step!==S.MENU&&step!==S.SERVICE)) return;
-  const svc=CATALOG.find(s=>s.id===id); if(!svc) return;
-  booking.service=svc; step=S.DAY;
-  addBubble("user",svc.name); showTyping(true);
-  setTimeout(()=>speak(`Perfecto, ${svc.name} cuesta ${svc.price} y dura ${svc.dur}. ¿Para qué día quieres la cita?`),400);
+function showWaves(on) {
+  const ico = document.getElementById("ico");
+  if (on) ico.innerHTML = `<div class="waves"><span></span><span></span><span></span><span></span><span></span></div>`;
+  else    ico.textContent = active ? "⏹️" : "🎙️";
+}
+function renderSvcs() {
+  document.getElementById("sgrid").innerHTML = CAT.map(s =>
+    `<div class="svc" id="sv_${s.id}" onclick="tapSvc('${s.id}')"><div class="sn">${s.n}</div><div class="sp">${s.p}</div><div class="sd">${s.d}</div></div>`
+  ).join("");
+}
+function tapSvc(id) {
+  if (!active || (step !== S.IDLE && step !== S.SVC)) return;
+  const s = CAT.find(x => x.id === id); if (!s) return;
+  bk.svc = s; step = S.DAY;
+  addMsg("usr", s.n); showDots(true);
   hlSvc(id);
+  setTimeout(() => say(`Perfecto, ${s.n} cuesta ${s.p} y dura ${s.d}. ¿Para qué día quieres la cita?`), 350);
 }
-function hlSvc(id){
-  document.querySelectorAll(".svc").forEach(el=>el.style.opacity="0.45");
-  const el=document.getElementById("svc_"+id);
-  if(el){ el.style.opacity="1"; el.style.background="rgba(212,168,71,.22)"; }
+function hlSvc(id) {
+  document.querySelectorAll(".svc").forEach(el => el.style.opacity = "0.4");
+  const el = document.getElementById("sv_" + id);
+  if (el) { el.style.opacity = "1"; el.style.background = "rgba(212,168,71,.2)"; }
 }
 </script>
 </body>
