@@ -150,8 +150,10 @@ let step = "idle";
 let booking = {};
 let recog = null;
 let sessionActive = false;
+let callStarted = false;  // evita doble saludo
 let isSpeaking = false;
-let gotResult = false;   // evita que onend relance el micro tras onresult
+let afterSpeakFired = false;  // evita doble disparo de onend + poll
+let gotResult = false;
 let silenceTimer = null;
 let listenTimer = null;
 let speakPollInterval = null;
@@ -181,12 +183,24 @@ function wordsToDigits(str) {
 }
 
 // ─── TTS con ResponsiveVoice ──────────────────────────────────────────────────
+function afterSpeak(onDone) {
+  if (afterSpeakFired) return;
+  afterSpeakFired = true;
+  clearInterval(speakPollInterval);
+  isSpeaking = false;
+  showWaves(false);
+  if (typeof onDone === "function") { onDone(); return; }
+  if (sessionActive && step !== "done") {
+    listenTimer = setTimeout(startListening, 600);
+  }
+}
+
 function speak(text, onDone) {
   if (!sessionActive) return;
 
-  // Parar micrófono y timers anteriores
   stopListening();
   clearInterval(speakPollInterval);
+  afterSpeakFired = false;
   isSpeaking = true;
   setStatus("blue", "Hablando...");
   showWaves(true);
@@ -194,31 +208,21 @@ function speak(text, onDone) {
 
   responsiveVoice.cancel();
 
-  responsiveVoice.speak(text, "Spanish Female", { rate: 0.93, pitch: 1.08 });
+  // onend como mecanismo principal, polling como fallback
+  responsiveVoice.speak(text, "Spanish Female", {
+    rate: 0.93,
+    pitch: 1.08,
+    onend:   () => afterSpeak(onDone),
+    onerror: () => afterSpeak(onDone),
+  });
 
-  // Polling: comprueba cada 150ms si ResponsiveVoice terminó
-  // (onend no es fiable en todos los navegadores)
+  // Fallback: poll cada 200ms por si onend no dispara
   const started = Date.now();
   speakPollInterval = setInterval(() => {
     const elapsed = Date.now() - started;
-    // Considerar terminado: RV dice que no está reproduciendo Y han pasado ≥800ms
-    if (elapsed > 800 && !responsiveVoice.isPlaying()) {
-      clearInterval(speakPollInterval);
-      isSpeaking = false;
-      showWaves(false);
-      if (typeof onDone === "function") { onDone(); return; }
-      if (sessionActive && step !== "done") {
-        listenTimer = setTimeout(startListening, 500);
-      }
-    }
-    // Seguridad: si lleva >30s asumimos error
-    if (elapsed > 30000) {
-      clearInterval(speakPollInterval);
-      isSpeaking = false;
-      showWaves(false);
-      if (sessionActive) listenTimer = setTimeout(startListening, 500);
-    }
-  }, 150);
+    if (elapsed > 1200 && !responsiveVoice.isPlaying()) afterSpeak(onDone);
+    if (elapsed > 30000) afterSpeak(onDone);
+  }, 200);
 }
 
 // ─── STT con Web Speech API ──────────────────────────────────────────────────
@@ -400,8 +404,15 @@ function reprompt() {
 function toggle() { sessionActive ? endCall() : startCall(); }
 
 function startCall() {
+  if (callStarted) return;
+  callStarted = true;
+
   const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!R) { alert("Por favor abre esta página en Google Chrome o Microsoft Edge."); return; }
+  if (!R) {
+    callStarted = false;
+    alert("Para el reconocimiento de voz usa Google Chrome o Microsoft Edge — Safari no lo soporta.");
+    return;
+  }
 
   sessionActive = true;
   booking = {};
@@ -432,6 +443,7 @@ function endCall() {
   document.getElementById("lab").textContent = "Llamar";
   setStatus("green", step === "done" ? "¡Cita reservada! ✓" : "Llamada finalizada");
   step = "idle";
+  callStarted = false;
 }
 
 // ─── UI ───────────────────────────────────────────────────────────────────────
