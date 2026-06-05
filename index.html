@@ -3,271 +3,409 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Asistente Virtual · Peluquería</title>
-<!-- ResponsiveVoice: voz femenina natural en español, sin API key -->
+<title>Studio 21 · Asistente Virtual</title>
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
+html{height:100%}
 body{
   font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  background:#0d0d18;color:#fff;
-  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:#0a0a0f;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
-.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.22;animation:drift 14s ease-in-out infinite}
-.b1{width:520px;height:520px;background:#a855f7;top:-160px;left:-160px}
-.b2{width:420px;height:420px;background:#6366f1;bottom:-120px;right:-120px;animation-delay:-5s}
-.b3{width:320px;height:320px;background:#ec4899;top:45%;left:45%;transform:translate(-50%,-50%);animation-delay:-10s}
-@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(25px,-18px) scale(1.04)}70%{transform:translate(-18px,12px) scale(.97)}}
 
-.card{
-  position:relative;z-index:1;
-  background:rgba(255,255,255,.05);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-  border:1px solid rgba(255,255,255,.1);border-radius:28px;
-  padding:44px 32px 36px;max-width:400px;width:calc(100% - 24px);
-  text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.55);
+/* ── Brand header ── */
+.header{
+  width:100%;max-width:480px;
+  padding:28px 24px 0;
+  display:flex;align-items:center;gap:14px;
 }
-.avatar{
-  width:76px;height:76px;border-radius:50%;
-  background:linear-gradient(135deg,#c084fc,#818cf8);
+.logo{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,#d4a847,#8b5e1a);
   display:flex;align-items:center;justify-content:center;
-  font-size:34px;margin:0 auto 18px;
-  box-shadow:0 8px 24px rgba(192,132,252,.45);
+  font-size:24px;flex-shrink:0;
+  box-shadow:0 4px 16px rgba(212,168,71,.4);
 }
-h1{font-size:21px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px}
-.sub{font-size:13px;color:#94a3b8;line-height:1.55;margin-bottom:32px}
-
-.wrap{position:relative;width:148px;height:148px;margin:0 auto 26px}
-.ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(192,132,252,.3);animation:ripple 2.2s ease-out infinite;opacity:0}
-.ring:nth-child(2){animation-delay:.75s}
-.ring:nth-child(3){animation-delay:1.5s}
-@keyframes ripple{0%{transform:scale(.85);opacity:.55}100%{transform:scale(1.35);opacity:0}}
-
-.btn{
-  position:relative;z-index:2;width:148px;height:148px;border-radius:50%;border:none;
-  background:linear-gradient(135deg,#c084fc 0%,#818cf8 100%);
-  cursor:pointer;transition:transform .22s,box-shadow .22s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  box-shadow:0 8px 32px rgba(192,132,252,.5);outline:none;-webkit-tap-highlight-color:transparent;user-select:none;
+.brand h1{font-size:20px;font-weight:700;letter-spacing:-.2px}
+.brand p{font-size:12px;color:#64748b;margin-top:2px}
+.badge{
+  margin-left:auto;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);
+  color:#4ade80;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:999px;
+  display:flex;align-items:center;gap:5px;flex-shrink:0;
 }
-.btn:hover{transform:scale(1.06);box-shadow:0 12px 44px rgba(192,132,252,.7)}
-.btn:active{transform:scale(.96)}
-.btn.listening{background:linear-gradient(135deg,#f472b6,#c084fc);animation:pulse 1.5s ease-in-out infinite}
-.btn.speaking{background:linear-gradient(135deg,#818cf8,#6366f1)}
-.btn.active{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:0 8px 32px rgba(244,63,94,.5)}
-@keyframes pulse{0%,100%{box-shadow:0 8px 32px rgba(244,114,182,.5)}50%{box-shadow:0 8px 50px rgba(244,114,182,.9),0 0 0 18px rgba(244,114,182,.1)}}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink .9s infinite}
 
-.bico{font-size:46px;line-height:1}
-.blab{font-size:11px;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.5px}
+/* ── Main card ── */
+.card{
+  width:100%;max-width:480px;
+  padding:0 16px 32px;
+  flex:1;display:flex;flex-direction:column;
+}
 
+/* ── Chat area ── */
+.chat-wrap{
+  flex:1;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;
+  margin:16px 0;
+  padding:16px;
+  min-height:240px;
+  max-height:340px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;
+}
+.chat-wrap::-webkit-scrollbar{width:3px}
+.chat-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+
+.bubble{
+  max-width:82%;
+  padding:10px 14px;
+  border-radius:16px;
+  font-size:14px;
+  line-height:1.55;
+  animation:fadeUp .25s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.bubble.ai{
+  background:rgba(212,168,71,.12);
+  border:1px solid rgba(212,168,71,.2);
+  color:#fde68a;
+  align-self:flex-start;
+  border-bottom-left-radius:4px;
+}
+.bubble.ai .sender{font-size:10px;color:#d4a847;font-weight:600;margin-bottom:4px;letter-spacing:.3px}
+.bubble.user{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.1);
+  color:#e2e8f0;
+  align-self:flex-end;
+  border-bottom-right-radius:4px;
+}
+
+.typing{
+  align-self:flex-start;
+  background:rgba(212,168,71,.1);
+  border:1px solid rgba(212,168,71,.15);
+  border-radius:16px;border-bottom-left-radius:4px;
+  padding:12px 16px;display:none;gap:5px;align-items:center;
+}
+.typing.show{display:flex}
+.typing span{
+  width:7px;height:7px;border-radius:50%;
+  background:#d4a847;opacity:.4;
+  animation:typedot 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typedot{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1.1)}}
+
+/* ── Status bar ── */
+.statusbar{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;
+  padding:10px 16px;
+  margin-bottom:14px;
+  font-size:13px;color:#94a3b8;
+}
+.statusbar .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.statusbar .dot.yellow{background:#facc15;animation:blink .7s infinite}
+.statusbar .dot.red{background:#f43f5e;animation:blink .7s infinite}
+.statusbar .dot.blue{background:#60a5fa;animation:blink .7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── Big call button ── */
+.btn-wrap{position:relative;width:160px;height:160px;margin:0 auto 20px}
+.ring{
+  position:absolute;inset:-16px;border-radius:50%;
+  border:2px solid rgba(212,168,71,.25);
+  animation:ripple 2.4s ease-out infinite;opacity:0;
+}
+.ring:nth-child(2){animation-delay:.8s}
+.ring:nth-child(3){animation-delay:1.6s}
+@keyframes ripple{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.4);opacity:0}}
+
+.callbtn{
+  position:relative;z-index:2;
+  width:160px;height:160px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#d4a847 0%,#8b5e1a 100%);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  box-shadow:0 8px 32px rgba(212,168,71,.45);
+  outline:none;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.callbtn:hover{transform:scale(1.05);box-shadow:0 12px 44px rgba(212,168,71,.65)}
+.callbtn:active{transform:scale(.96)}
+.callbtn.listening{
+  background:linear-gradient(135deg,#f472b6,#c084fc);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+.callbtn.active{
+  background:linear-gradient(135deg,#f43f5e,#be123c);
+  box-shadow:0 8px 32px rgba(244,63,94,.5);
+  animation:none;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 8px 32px rgba(244,114,182,.4)}
+  50%{box-shadow:0 8px 50px rgba(244,114,182,.8),0 0 0 20px rgba(244,114,182,.08)}
+}
+.callbtn .ico{font-size:48px;line-height:1}
+.callbtn .lbl{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.6px;text-transform:uppercase}
+
+.waves{display:flex;gap:3px;align-items:center;justify-content:center;height:32px}
+.waves span{display:block;width:4px;border-radius:2px;background:#fff;animation:wave 1s ease-in-out infinite}
+.waves span:nth-child(1){height:10px;animation-delay:0s}
+.waves span:nth-child(2){height:20px;animation-delay:.15s}
+.waves span:nth-child(3){height:28px;animation-delay:.3s}
+.waves span:nth-child(4){height:20px;animation-delay:.45s}
+.waves span:nth-child(5){height:10px;animation-delay:.6s}
+@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+/* ── Info pills ── */
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
 .pill{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-  border-radius:999px;padding:9px 18px;font-size:13px;color:#cbd5e1;
-  margin-bottom:26px;min-width:210px;justify-content:center;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;padding:6px 14px;
+  font-size:12px;color:#94a3b8;
 }
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.green{background:#4ade80}
-.yellow{background:#facc15;animation:blink .7s infinite}
-.red{background:#f43f5e;animation:blink .7s infinite}
-.blue{background:#60a5fa;animation:blink .7s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
-.chat{
-  background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.07);
-  border-radius:14px;padding:14px 16px;
-  max-height:150px;overflow-y:auto;
-  text-align:left;font-size:13px;line-height:1.65;
-  display:none;margin-bottom:24px;
+/* ── Services quick ref ── */
+.services-panel{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:16px;
+  display:none;
 }
-.chat.show{display:block}
-.chat::-webkit-scrollbar{width:4px}
-.chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
-.ai{color:#d8b4fe;margin-bottom:4px}
-.ai::before{content:"💬 "}
-.usr{color:#7dd3fc;margin-bottom:4px}
-.usr::before{content:"🎤 "}
+.services-panel.show{display:block}
+.services-panel h3{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.svc{
+  background:rgba(212,168,71,.06);
+  border:1px solid rgba(212,168,71,.12);
+  border-radius:10px;padding:10px 12px;
+  cursor:pointer;transition:background .15s;
+}
+.svc:hover{background:rgba(212,168,71,.12)}
+.svc .sn{font-size:13px;font-weight:600;color:#fde68a;margin-bottom:2px}
+.svc .sp{font-size:11px;color:#d4a847}
+.svc .sd{font-size:11px;color:#64748b}
 
-.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
-.feat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px 9px;font-size:12px;color:#94a3b8}
-.fi{font-size:18px;display:block;margin-bottom:4px}
-
-.foot{font-size:11px;color:#334155}
-.foot span{color:#475569}
-
-.waves{display:flex;gap:3px;align-items:center;justify-content:center;height:28px;margin-bottom:2px}
-.waves span{display:block;width:4px;border-radius:2px;background:rgba(255,255,255,.9);animation:wave 1s ease-in-out infinite}
-.waves span:nth-child(1){animation-delay:0s;height:10px}
-.waves span:nth-child(2){animation-delay:.15s;height:18px}
-.waves span:nth-child(3){animation-delay:.3s;height:24px}
-.waves span:nth-child(4){animation-delay:.45s;height:18px}
-.waves span:nth-child(5){animation-delay:.6s;height:10px}
-@keyframes wave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
-
-#rv-badge{display:none!important} /* ocultar badge de responsivevoice */
+#rv-badge{display:none!important}
 </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<!-- Header -->
+<div class="header">
+  <div class="logo">✂️</div>
+  <div class="brand">
+    <h1>Studio 21</h1>
+    <p>Peluquería &amp; Barbería · Madrid</p>
+  </div>
+  <div class="badge">En línea</div>
 </div>
 
 <div class="card">
-  <div class="avatar">💇‍♀️</div>
-  <h1>Peluquería &amp; Estética</h1>
-  <p class="sub">Habla con nuestra asistente virtual para<br>reservar tu cita al instante.</p>
 
-  <div class="wrap">
+  <!-- Chat -->
+  <div class="chat-wrap" id="chatBox">
+    <div class="bubble ai">
+      <div class="sender">SOFIA · ASISTENTE</div>
+      ¡Hola! Soy Sofía, la asistente virtual de Studio 21. Puedo reservarte una cita, informarte sobre nuestros servicios y precios, o resolver cualquier duda. ¿En qué te ayudo? 😊
+    </div>
+    <div class="typing" id="typing">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="statusbar">
+    <div class="dot" id="dot"></div>
+    <span id="stxt">Pulsa el botón y habla con Sofía</span>
+  </div>
+
+  <!-- Call button -->
+  <div class="btn-wrap">
     <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-    <button class="btn" id="btn" onclick="toggle()">
-      <span class="bico" id="ico">🎙️</span>
-      <span class="blab" id="lab">Llamar</span>
+    <button class="callbtn" id="callBtn" onclick="toggle()">
+      <span class="ico" id="ico">🎙️</span>
+      <span class="lbl" id="lbl">Llamar</span>
     </button>
   </div>
 
-  <div class="pill">
-    <div class="dot green" id="dot"></div>
-    <span id="stxt">Lista para atenderte</span>
+  <!-- Info pills -->
+  <div class="pills">
+    <div class="pill">📍 Calle Gran Vía 21, Madrid</div>
+    <div class="pill">🕐 Lun–Vie 9–20h · Sáb 9–18h</div>
+    <div class="pill">📞 +34 912 345 678</div>
   </div>
 
-  <div class="chat" id="chat"></div>
-
-  <div class="feats">
-    <div class="feat"><span class="fi">📅</span>Reservas 24/7</div>
-    <div class="feat"><span class="fi">📱</span>SMS confirmación</div>
-    <div class="feat"><span class="fi">⏰</span>Recordatorio 1h antes</div>
-    <div class="feat"><span class="fi">🗣️</span>Voz natural en español</div>
+  <!-- Services panel -->
+  <div class="services-panel" id="svcsPanel">
+    <h3>Servicios — pulsa para seleccionar</h3>
+    <div class="svc-grid" id="svcGrid"></div>
   </div>
 
-  <p class="foot">Demo · <span>ResponsiveVoice · Web Speech API</span></p>
 </div>
 
 <script>
-// ─── Estado ──────────────────────────────────────────────────────────────────
-let step = "idle";
+// ════════════════════════════════════════════════════════════
+//  CATÁLOGO
+// ════════════════════════════════════════════════════════════
+const CATALOG = [
+  // Peluquería
+  {id:"corte_mujer",   name:"Corte mujer",       price:"28€",  dur:"35 min",  keys:["corte mujer","corte de mujer","pelo mujer"]},
+  {id:"corte_hombre",  name:"Corte hombre",       price:"18€",  dur:"25 min",  keys:["corte hombre","corte de hombre","pelo hombre","barba y corte"]},
+  {id:"corte_nino",    name:"Corte niño/niña",    price:"12€",  dur:"20 min",  keys:["corte niño","niño","niña","infantil"]},
+  {id:"lavado_corte",  name:"Lavado + Corte",     price:"35€",  dur:"50 min",  keys:["lavado","lavado y corte","lavar"]},
+  {id:"tinte",         name:"Tinte completo",     price:"65€",  dur:"90 min",  keys:["tinte","teñir","color"]},
+  {id:"mechas",        name:"Mechas / Balayage",  price:"90€",  dur:"2h",      keys:["mechas","balayage","highlights","luces"]},
+  {id:"permanente",    name:"Permanente",         price:"75€",  dur:"2h",      keys:["permanente","rizo","ondas"]},
+  {id:"tratamiento",   name:"Tratamiento capilar",price:"45€",  dur:"60 min",  keys:["tratamiento","hidratación","keratina","brillo"]},
+  // Barbería
+  {id:"barba",         name:"Arreglo de barba",   price:"12€",  dur:"20 min",  keys:["barba","barba sola","arreglo barba"]},
+  {id:"barba_navaja",  name:"Afeitado navaja",    price:"20€",  dur:"30 min",  keys:["navaja","afeitado","afeitado clásico"]},
+  {id:"corte_barba",   name:"Corte + Barba",      price:"28€",  dur:"45 min",  keys:["corte y barba","corte con barba"]},
+  // Estética
+  {id:"peinado",       name:"Peinado / Recogido", price:"35€",  dur:"45 min",  keys:["peinado","recogido","moño","novia","evento"]},
+  {id:"alisado",       name:"Alisado profesional",price:"85€",  dur:"2h 30min",keys:["alisado","lacio","liso"]},
+];
+
+// Preguntas frecuentes (FAQ)
+const FAQ = {
+  precio:    "Nuestros precios van desde 12€ el corte de niño hasta 90€ las mechas. ¿Quieres que te cuente el precio de un servicio concreto?",
+  horario:   "Abrimos de lunes a viernes de 9 a 20 horas, y los sábados de 9 a 18 horas. Los domingos descansamos.",
+  ubicacion: "Estamos en Calle Gran Vía 21, Madrid, muy cerca del metro Gran Vía. ¿Necesitas indicaciones?",
+  parking:   "Hay parking público a 50 metros, en la Calle Montera. También hay zona de estacionamiento regulado en los alrededores.",
+  equipo:    "Nuestro equipo está formado por cinco estilistas especializados en corte moderno, coloración y barbería clásica. Todos con más de 5 años de experiencia.",
+  espera:    "Normalmente no hay espera si tienes cita previa. Sin cita el tiempo medio es de 15 a 20 minutos.",
+  cancelar:  "Puedes cancelar hasta 2 horas antes sin coste. Solo llama al 912 345 678 o responde al SMS de confirmación.",
+  productos: "Trabajamos con productos de Kerastase, Wella Professionals y American Crew para barbería. También los vendemos en el salón.",
+};
+
+// ════════════════════════════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════════════════════════════
+const STEPS = { MENU:"menu", SERVICE:"service", DAY:"day", TIME:"time", NAME:"name", PHONE:"phone", CONFIRM:"confirm", DONE:"done" };
+let step = STEPS.MENU;
 let booking = {};
-let recog = null;
 let sessionActive = false;
-let callStarted = false;  // evita doble saludo
+let callStarted = false;
 let isSpeaking = false;
-let afterSpeakFired = false;  // evita doble disparo de onend + poll
+let afterSpeakFired = false;
 let gotResult = false;
+let recog = null;
 let silenceTimer = null;
 let listenTimer = null;
 let speakPollInterval = null;
 
-const SERVICES = {
-  "corte":       {label:"Corte de pelo",    price:"25€", dur:"30 minutos"},
-  "lavado":      {label:"Corte y lavado",   price:"35€", dur:"45 minutos"},
-  "tinte":       {label:"Tinte completo",   price:"65€", dur:"hora y media"},
-  "mechas":      {label:"Mechas",           price:"85€", dur:"2 horas"},
-  "highlights":  {label:"Mechas",           price:"85€", dur:"2 horas"},
-  "peinado":     {label:"Peinado",          price:"30€", dur:"45 minutos"},
-  "tratamiento": {label:"Tratamiento capilar",price:"45€",dur:"1 hora"},
-};
-
-// Convierte palabras numéricas en español a dígitos
 const NUMWORDS = {
-  "cero":0,"uno":1,"una":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,
-  "seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,
-  "doce":12,"trece":13,"catorce":14,"quince":15,"dieciséis":16,"dieciseis":16,
-  "diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20,
+  cero:0,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,
+  seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,
+  doce:12,trece:13,catorce:14,quince:15,"dieciséis":16,dieciseis:16,
+  diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,
 };
-function wordsToDigits(str) {
-  return str.split(/\s+/).map(w => {
-    const n = NUMWORDS[w.toLowerCase()];
-    return n !== undefined ? String(n) : w;
-  }).join(" ");
-}
+function w2d(s){ return s.split(/\s+/).map(w=>{ const n=NUMWORDS[w]; return n!==undefined?String(n):w; }).join(" "); }
 
-// ─── TTS con ResponsiveVoice ──────────────────────────────────────────────────
-function afterSpeak(onDone) {
+// ════════════════════════════════════════════════════════════
+//  TTS
+// ════════════════════════════════════════════════════════════
+function afterSpeak(cb) {
   if (afterSpeakFired) return;
   afterSpeakFired = true;
   clearInterval(speakPollInterval);
   isSpeaking = false;
   showWaves(false);
-  if (typeof onDone === "function") { onDone(); return; }
-  if (sessionActive && step !== "done") {
-    listenTimer = setTimeout(startListening, 600);
-  }
+  if (typeof cb === "function") { cb(); return; }
+  if (sessionActive && step !== STEPS.DONE) listenTimer = setTimeout(startListening, 600);
 }
 
-function speak(text, onDone) {
+function speak(text, cb) {
   if (!sessionActive) return;
-
   stopListening();
   clearInterval(speakPollInterval);
   afterSpeakFired = false;
   isSpeaking = true;
-  setStatus("blue", "Hablando...");
+  setStatus("blue", "Sofía está hablando...");
   showWaves(true);
-  addChat("ai", text);
-
+  showTyping(false);
+  addBubble("ai", text);
   responsiveVoice.cancel();
-
-  // onend como mecanismo principal, polling como fallback
   responsiveVoice.speak(text, "Spanish Female", {
-    rate: 0.93,
-    pitch: 1.08,
-    onend:   () => afterSpeak(onDone),
-    onerror: () => afterSpeak(onDone),
+    rate: 0.92, pitch: 1.1,
+    onend:   () => afterSpeak(cb),
+    onerror: () => afterSpeak(cb),
   });
-
-  // Fallback: poll cada 200ms por si onend no dispara
-  const started = Date.now();
+  const t0 = Date.now();
   speakPollInterval = setInterval(() => {
-    const elapsed = Date.now() - started;
-    if (elapsed > 1200 && !responsiveVoice.isPlaying()) afterSpeak(onDone);
-    if (elapsed > 30000) afterSpeak(onDone);
+    const e = Date.now()-t0;
+    if (e > 1200 && !responsiveVoice.isPlaying()) afterSpeak(cb);
+    if (e > 35000) afterSpeak(cb);
   }, 200);
 }
 
-// ─── STT con Web Speech API ──────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  STT
+// ════════════════════════════════════════════════════════════
 function stopListening() {
   clearTimeout(silenceTimer);
   clearTimeout(listenTimer);
-  if (recog) { try { recog.abort(); } catch(e){} recog = null; }
+  if (recog) { try{ recog.abort(); }catch(e){} recog=null; }
 }
 
 function startListening() {
   if (!sessionActive || isSpeaking) return;
-
   const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!R) { alert("Por favor abre esta página en Google Chrome o Microsoft Edge."); return; }
-
+  if (!R) return;
   stopListening();
   gotResult = false;
-
   recog = new R();
   recog.lang = "es-ES";
   recog.continuous = false;
   recog.interimResults = false;
-  recog.maxAlternatives = 3;
+  recog.maxAlternatives = 5;
 
   recog.onstart = () => {
     setBtn("listening");
-    setStatus("red", "Escuchando...");
+    setStatus("red", "Escuchando — habla ahora...");
     silenceTimer = setTimeout(() => {
       if (sessionActive && !isSpeaking) speak(reprompt());
-    }, 9000);
+    }, 10000);
   };
 
   recog.onresult = (e) => {
     clearTimeout(silenceTimer);
     gotResult = true;
-    const raw = Array.from(e.results).map(r => r[0].transcript).join(" ").trim().toLowerCase();
-    const text = wordsToDigits(raw);
-    addChat("usr", raw);
-    processInput(text);
+    // Tomar la alternativa con mayor confianza
+    let best = "";
+    for (let r of e.results) {
+      for (let a of Array.from(r)) {
+        if (!best || a.confidence > 0) { best = a.transcript; break; }
+      }
+    }
+    const raw = best.trim().toLowerCase();
+    const text = w2d(raw);
+    addBubble("user", raw);
+    showTyping(true);
+    setTimeout(() => processInput(text), 400);
   };
 
   recog.onerror = (e) => {
     clearTimeout(silenceTimer);
     if (!sessionActive) return;
-    if (e.error === "no-speech")   { listenTimer = setTimeout(startListening, 200); return; }
+    if (e.error === "no-speech")    { listenTimer = setTimeout(startListening, 250); return; }
     if (e.error === "aborted" || e.error === "interrupted") return;
     setStatus("yellow", "No te escuché, repite...");
     listenTimer = setTimeout(startListening, 1000);
@@ -275,52 +413,81 @@ function startListening() {
 
   recog.onend = () => {
     clearTimeout(silenceTimer);
-    // Si ya procesamos resultado (speak() está corriendo), no relancar
     if (gotResult) return;
-    if (sessionActive && !isSpeaking && step !== "done" && step !== "idle") {
+    if (sessionActive && !isSpeaking && step !== STEPS.DONE && step !== STEPS.MENU) {
       listenTimer = setTimeout(startListening, 300);
     }
   };
 
   try { recog.start(); }
-  catch(e) { listenTimer = setTimeout(startListening, 600); }
+  catch(e) { listenTimer = setTimeout(startListening, 700); }
 }
 
-// ─── Flujo de conversación ───────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  LÓGICA DE CONVERSACIÓN
+// ════════════════════════════════════════════════════════════
 function processInput(text) {
-  clearTimeout(silenceTimer);
-  if (step === "service") return handleService(text);
-  if (step === "day")     return handleDay(text);
-  if (step === "time")    return handleTime(text);
-  if (step === "name")    return handleName(text);
-  if (step === "phone")   return handlePhone(text);
-  if (step === "confirm") return handleConfirm(text);
+  // Detectar intenciones globales (funcionan en cualquier paso)
+  if (/precio|cuánto cuesta|cuanto cuesta|cuestan|tarifas|tarifa/i.test(text)) return speak(FAQ.precio);
+  if (/horario|hora abr|a qué hora|cuándo abr|cuando abr|días/i.test(text)) return speak(FAQ.horario);
+  if (/dónde|donde estáis|donde estais|ubicación|dirección|cómo llego|como llego/i.test(text)) return speak(FAQ.ubicacion);
+  if (/parking|aparcar|aparcamiento/i.test(text)) return speak(FAQ.parking);
+  if (/equipo|estilista|quién trabaja|quien trabaja|profesional/i.test(text)) return speak(FAQ.equipo);
+  if (/espera|tiempo libre|sin cita/i.test(text)) return speak(FAQ.espera);
+  if (/cancelar|anular|cambiar cita/i.test(text)) return speak(FAQ.cancelar);
+  if (/producto|marca|kerastase|wella/i.test(text)) return speak(FAQ.productos);
+
+  if (step === STEPS.MENU || step === STEPS.SERVICE) return handleService(text);
+  if (step === STEPS.DAY)     return handleDay(text);
+  if (step === STEPS.TIME)    return handleTime(text);
+  if (step === STEPS.NAME)    return handleName(text);
+  if (step === STEPS.PHONE)   return handlePhone(text);
+  if (step === STEPS.CONFIRM) return handleConfirm(text);
 }
 
 function handleService(text) {
-  for (const [key, svc] of Object.entries(SERVICES)) {
-    if (text.includes(key)) {
-      booking.service = svc;
-      step = "day";
-      speak(`Perfecto. ${svc.label} tiene un precio de ${svc.price} y dura aproximadamente ${svc.dur}. ¿Para qué día quieres la cita?`);
-      return;
+  // Buscar en catálogo
+  for (const svc of CATALOG) {
+    for (const key of svc.keys) {
+      if (text.includes(key)) {
+        booking.service = svc;
+        step = STEPS.DAY;
+        speak(`Perfecto, ${svc.name} cuesta ${svc.price} y dura ${svc.dur}. ¿Para qué día quieres la cita?`);
+        highlightService(svc.id);
+        return;
+      }
     }
   }
-  speak("Claro. Tenemos corte de pelo, corte con lavado, tinte, mechas, peinado y tratamiento capilar. ¿Qué servicio te interesa?");
+  // Detectar "cita", "reservar", "quiero"
+  if (/cita|reservar|pedir|apuntar|quiero/i.test(text)) {
+    speak("Claro, con mucho gusto. ¿Qué servicio te interesa? Tenemos corte de mujer, corte de hombre, tinte, mechas, balayage, arreglo de barba, afeitado clásico, peinado y tratamientos capilares.");
+    return;
+  }
+  speak("Entendido. ¿Te puedo reservar algún servicio? Tenemos corte, tinte, mechas, barba, peinado y mucho más. ¿Qué te apetece?");
 }
 
 function handleDay(text) {
   const map = {
-    lunes:"lunes", martes:"martes", "miércoles":"miércoles", miercoles:"miércoles",
-    jueves:"jueves", viernes:"viernes", "sábado":"sábado", sabado:"sábado",
-    "mañana":"mañana", hoy:"hoy", pasado:"pasado mañana",
+    lunes:"lunes",martes:"martes","miércoles":"miércoles",miercoles:"miércoles",
+    jueves:"jueves",viernes:"viernes","sábado":"sábado",sabado:"sábado",
+    "mañana":"mañana",hoy:"hoy",pasado:"pasado mañana",
   };
   for (const [k,v] of Object.entries(map)) {
-    if (text.includes(k)) { booking.day = v; step = "time"; speak(`El ${v}, perfecto. ¿A qué hora te viene mejor?`); return; }
+    if (text.includes(k)) {
+      booking.day = v;
+      step = STEPS.TIME;
+      speak(`El ${v}, perfecto. ¿A qué hora te viene mejor?`);
+      return;
+    }
   }
-  const m = text.match(/(\d{1,2})/);
-  if (m) { booking.day = `el día ${m[1]}`; step = "time"; speak(`El día ${m[1]}, anotado. ¿A qué hora?`); return; }
-  speak("No te he escuchado bien. ¿Puedes decirme el día? Por ejemplo: lunes, martes, miércoles...");
+  const m = text.match(/(\d{1,2})\s*(de)?\s*(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)?/);
+  if (m && parseInt(m[1]) >= 1 && parseInt(m[1]) <= 31) {
+    booking.day = `el día ${m[1]}${m[3] ? " de "+m[3] : ""}`;
+    step = STEPS.TIME;
+    speak(`${booking.day}, anotado. ¿A qué hora?`);
+    return;
+  }
+  speak("¿Para qué día quieres la cita? Puedes decirme lunes, martes, miércoles, jueves, viernes o sábado.");
 }
 
 function handleTime(text) {
@@ -328,29 +495,29 @@ function handleTime(text) {
   if (m) {
     let h = parseInt(m[1]);
     let min = m[2] || "00";
-    if (text.includes("tarde") || text.includes("noche")) { if (h < 7) h += 12; }
-    if (text.includes("media")) min = "30";
-    if (text.includes("cuarto") && !text.includes("tres cuartos")) min = "15";
-    if (text.includes("tres cuartos")) min = "45";
+    if (/tarde|noche/.test(text) && h < 7) h += 12;
+    if (/y media/.test(text)) min = "30";
+    if (/y cuarto/.test(text)) min = "15";
+    if (/menos cuarto/.test(text)) { h -= 1; min = "45"; }
     if (h >= 9 && h <= 20) {
       booking.time = `${String(h).padStart(2,"0")}:${min}`;
-      step = "name";
-      speak(`A las ${booking.time}. ¿Me puedes decir tu nombre completo?`);
+      step = STEPS.NAME;
+      speak(`A las ${booking.time}. ¿Me dices tu nombre completo para la reserva?`);
       return;
     }
   }
-  speak("Nuestro horario es de nueve a veinte horas de lunes a viernes, y de nueve a dieciocho los sábados. ¿Qué hora prefieres?");
+  speak("Nuestro horario es de 9 a 20h de lunes a viernes, y de 9 a 18h los sábados. ¿Qué hora te viene bien?");
 }
 
 function handleName(text) {
-  const stop = ["me llamo","soy","mi nombre es","llamo","nombre","es"];
+  const stop = ["me llamo","soy","mi nombre es","llamo","nombre","es","se llama","llama"];
   let name = text;
   stop.forEach(s => { name = name.replace(new RegExp("\\b"+s+"\\b","gi"),""); });
-  name = name.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+  name = name.trim().split(/\s+/).filter(w=>w.length>1).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
   if (name.length > 1) {
     booking.name = name;
-    step = "phone";
-    speak(`Encantada, ${name.split(" ")[0]}. ¿Y tu número de teléfono para enviarte la confirmación?`);
+    step = STEPS.PHONE;
+    speak(`Encantada, ${name.split(" ")[0]}. ¿Y tu número de teléfono para mandarte la confirmación y el recordatorio?`);
   } else {
     speak("¿Me puedes decir tu nombre, por favor?");
   }
@@ -361,108 +528,121 @@ function handlePhone(text) {
   if (digits.length >= 9) {
     const raw = digits.slice(-9);
     booking.phone = raw.replace(/(\d{3})(\d{3})(\d{3})/,"$1 $2 $3");
-    step = "confirm";
-    speak(`Perfecto. Te confirmo la reserva: ${summaryText()}. ¿Es correcto?`);
+    step = STEPS.CONFIRM;
+    speak(`Perfecto. Entonces reservo: ${summaryText()}. ¿Todo correcto?`);
   } else {
-    speak("No he captado bien el número. Por favor, dímelo despacio.");
+    speak("No he captado bien el número, ¿me lo repites despacio?");
   }
 }
 
 function handleConfirm(text) {
-  if (/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|eso es|confirmo|ok)\b/.test(text)) {
-    step = "done";
+  if (/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|eso|confirmo|ok|genial|adelante)\b/.test(text)) {
+    step = STEPS.DONE;
     speak(
-      `¡Genial! Tu cita está reservada. Te enviaremos un mensaje de confirmación al ${booking.phone}, y otro recordatorio una hora antes. ¡Hasta pronto, ${booking.name.split(" ")[0]}!`,
-      () => setTimeout(endCall, 2800)
+      `¡Listo! Tu cita está confirmada en Studio 21. Te enviaremos un SMS de confirmación al ${booking.phone}, y otro recordatorio una hora antes. ¡Hasta pronto, ${booking.name.split(" ")[0]}! Que tengas un día estupendo.`,
+      () => setTimeout(endCall, 3200)
     );
-  } else if (/\b(no|mal|cambia|otro|distinto)\b/.test(text)) {
+  } else if (/\b(no|mal|cambia|error|otro|equivocado)\b/.test(text)) {
     booking = {};
-    step = "service";
-    speak("Sin problema, empezamos de nuevo. ¿Qué servicio deseas?");
+    step = STEPS.SERVICE;
+    speak("Sin problema, empezamos de nuevo. ¿Qué servicio te gustaría reservar?");
   } else {
-    speak(`Disculpa, te repito: ${summaryText()}. ¿Confirmo la cita?`);
+    speak(`Te confirmo: ${summaryText()}. Dime sí para confirmar o no para corregir algo.`);
   }
 }
 
 function summaryText() {
-  return `${booking.service?.label} el ${booking.day} a las ${booking.time}, a nombre de ${booking.name}, teléfono ${booking.phone}`;
+  return `${booking.service?.name} el ${booking.day} a las ${booking.time}, a nombre de ${booking.name}, teléfono ${booking.phone}`;
 }
 
 function reprompt() {
   const r = {
-    service: "¿Qué servicio te gustaría reservar?",
-    day:     "¿Para qué día quieres la cita?",
-    time:    "¿A qué hora te viene mejor?",
-    name:    "¿Me puedes decir tu nombre?",
-    phone:   "¿Cuál es tu número de teléfono?",
-    confirm: `Te confirmo: ${summaryText()}. ¿Es correcto?`,
+    [STEPS.SERVICE]:"¿Qué servicio te gustaría?",
+    [STEPS.DAY]:"¿Para qué día quieres la cita?",
+    [STEPS.TIME]:"¿A qué hora te viene mejor?",
+    [STEPS.NAME]:"¿Me puedes decir tu nombre?",
+    [STEPS.PHONE]:"¿Cuál es tu número de teléfono?",
+    [STEPS.CONFIRM]:`Entonces: ${summaryText()}. ¿Confirmo?`,
   };
-  return r[step] || "¿En qué puedo ayudarte?";
+  return r[step] || "¿Hay algo en lo que pueda ayudarte?";
 }
 
-// ─── Control de llamada ───────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  CONTROL DE LLAMADA
+// ════════════════════════════════════════════════════════════
 function toggle() { sessionActive ? endCall() : startCall(); }
 
 function startCall() {
   if (callStarted) return;
   callStarted = true;
-
   const R = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!R) {
     callStarted = false;
-    alert("Para el reconocimiento de voz usa Google Chrome o Microsoft Edge — Safari no lo soporta.");
+    alert("Usa Google Chrome o Microsoft Edge para el reconocimiento de voz. Safari no lo soporta.");
     return;
   }
-
   sessionActive = true;
   booking = {};
-  step = "service";
-
-  const btn = document.getElementById("btn");
-  btn.className = "btn active";
+  step = STEPS.MENU;
+  document.getElementById("callBtn").className = "callbtn active";
   document.getElementById("ico").textContent = "⏹️";
-  document.getElementById("lab").textContent = "Colgar";
-  document.getElementById("chat").classList.add("show");
-
-  speak("¡Hola! Bienvenida a nuestra peluquería. Soy tu asistente virtual y estoy aquí para ayudarte a reservar tu cita. ¿Qué servicio te gustaría?");
+  document.getElementById("lbl").textContent = "Colgar";
+  document.getElementById("svcsPanel").classList.add("show");
+  renderServices();
+  speak("¡Hola! Bienvenido o bienvenida a Studio 21. Soy Sofía. Puedo reservarte una cita, informarte sobre nuestros precios y servicios, o resolver cualquier duda. ¿En qué te ayudo hoy?");
 }
 
 function endCall() {
   sessionActive = false;
+  callStarted = false;
   clearTimeout(silenceTimer);
   clearTimeout(listenTimer);
   clearInterval(speakPollInterval);
   responsiveVoice.cancel();
-  if (recog) { try { recog.abort(); } catch(e){} recog = null; }
+  if (recog) { try{ recog.abort(); }catch(e){} recog=null; }
   isSpeaking = false;
   showWaves(false);
-
-  const btn = document.getElementById("btn");
-  btn.className = "btn";
+  showTyping(false);
+  document.getElementById("callBtn").className = "callbtn";
   document.getElementById("ico").textContent = "🎙️";
-  document.getElementById("lab").textContent = "Llamar";
-  setStatus("green", step === "done" ? "¡Cita reservada! ✓" : "Llamada finalizada");
-  step = "idle";
-  callStarted = false;
+  document.getElementById("lbl").textContent = "Llamar";
+  setStatus("green", step === STEPS.DONE ? "¡Cita reservada! ✓ Hasta pronto" : "Llamada finalizada · Pulsa para volver a llamar");
+  step = STEPS.MENU;
 }
 
-// ─── UI ───────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════════════════
 function setStatus(color, text) {
   document.getElementById("dot").className = "dot "+color;
   document.getElementById("stxt").textContent = text;
 }
 
 function setBtn(state) {
-  document.getElementById("btn").className = "btn active " + state;
+  const b = document.getElementById("callBtn");
+  b.className = "callbtn active " + (state||"");
 }
 
-function addChat(role, text) {
-  const box = document.getElementById("chat");
-  const el  = document.createElement("div");
-  el.className = role;
-  el.textContent = text;
-  box.appendChild(el);
+function addBubble(role, text) {
+  const box = document.getElementById("chatBox");
+  const typing = document.getElementById("typing");
+  const el = document.createElement("div");
+  el.className = "bubble "+role;
+  if (role === "ai") {
+    el.innerHTML = `<div class="sender">SOFIA · ASISTENTE</div>${escHtml(text)}`;
+  } else {
+    el.textContent = text;
+  }
+  box.insertBefore(el, typing);
   box.scrollTop = box.scrollHeight;
+}
+
+function escHtml(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function showTyping(on) {
+  const t = document.getElementById("typing");
+  t.className = on ? "typing show" : "typing";
+  if (on) { const b=document.getElementById("chatBox"); b.scrollTop=b.scrollHeight; }
 }
 
 function showWaves(on) {
@@ -472,6 +652,35 @@ function showWaves(on) {
   } else {
     ico.textContent = sessionActive ? "⏹️" : "🎙️";
   }
+}
+
+function renderServices() {
+  const grid = document.getElementById("svcGrid");
+  grid.innerHTML = CATALOG.map(s =>
+    `<div class="svc" id="svc_${s.id}" onclick="selectService('${s.id}')">
+      <div class="sn">${s.name}</div>
+      <div class="sp">${s.price}</div>
+      <div class="sd">${s.dur}</div>
+    </div>`
+  ).join("");
+}
+
+function selectService(id) {
+  if (!sessionActive || step !== STEPS.MENU && step !== STEPS.SERVICE) return;
+  const svc = CATALOG.find(s => s.id === id);
+  if (!svc) return;
+  booking.service = svc;
+  step = STEPS.DAY;
+  addBubble("user", svc.name);
+  showTyping(true);
+  setTimeout(() => speak(`Perfecto, ${svc.name} cuesta ${svc.price} y dura ${svc.dur}. ¿Para qué día quieres la cita?`), 400);
+  highlightService(id);
+}
+
+function highlightService(id) {
+  document.querySelectorAll(".svc").forEach(el => el.style.opacity = "0.4");
+  const el = document.getElementById("svc_"+id);
+  if (el) { el.style.opacity="1"; el.style.background="rgba(212,168,71,.2)"; }
 }
 </script>
 </body>
