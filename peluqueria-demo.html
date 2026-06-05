@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Asistente Virtual · Peluquería</title>
+<!-- ResponsiveVoice: voz femenina natural en español, sin API key -->
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#0d0d18;color:#fff;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.22;animation:drift 14s ease-in-out infinite}
+.b1{width:520px;height:520px;background:#a855f7;top:-160px;left:-160px}
+.b2{width:420px;height:420px;background:#6366f1;bottom:-120px;right:-120px;animation-delay:-5s}
+.b3{width:320px;height:320px;background:#ec4899;top:45%;left:45%;transform:translate(-50%,-50%);animation-delay:-10s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(25px,-18px) scale(1.04)}70%{transform:translate(-18px,12px) scale(.97)}}
+
+.card{
+  position:relative;z-index:1;
+  background:rgba(255,255,255,.05);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1px solid rgba(255,255,255,.1);border-radius:28px;
+  padding:44px 32px 36px;max-width:400px;width:calc(100% - 24px);
+  text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.55);
+}
+.avatar{
+  width:76px;height:76px;border-radius:50%;
+  background:linear-gradient(135deg,#c084fc,#818cf8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;margin:0 auto 18px;
+  box-shadow:0 8px 24px rgba(192,132,252,.45);
+}
+h1{font-size:21px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px}
+.sub{font-size:13px;color:#94a3b8;line-height:1.55;margin-bottom:32px}
+
+.wrap{position:relative;width:148px;height:148px;margin:0 auto 26px}
+.ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(192,132,252,.3);animation:ripple 2.2s ease-out infinite;opacity:0}
+.ring:nth-child(2){animation-delay:.75s}
+.ring:nth-child(3){animation-delay:1.5s}
+@keyframes ripple{0%{transform:scale(.85);opacity:.55}100%{transform:scale(1.35);opacity:0}}
+
+.btn{
+  position:relative;z-index:2;width:148px;height:148px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#c084fc 0%,#818cf8 100%);
+  cursor:pointer;transition:transform .22s,box-shadow .22s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  box-shadow:0 8px 32px rgba(192,132,252,.5);outline:none;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.btn:hover{transform:scale(1.06);box-shadow:0 12px 44px rgba(192,132,252,.7)}
+.btn:active{transform:scale(.96)}
+.btn.listening{background:linear-gradient(135deg,#f472b6,#c084fc);animation:pulse 1.5s ease-in-out infinite}
+.btn.speaking{background:linear-gradient(135deg,#818cf8,#6366f1)}
+.btn.active{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:0 8px 32px rgba(244,63,94,.5)}
+@keyframes pulse{0%,100%{box-shadow:0 8px 32px rgba(244,114,182,.5)}50%{box-shadow:0 8px 50px rgba(244,114,182,.9),0 0 0 18px rgba(244,114,182,.1)}}
+
+.bico{font-size:46px;line-height:1}
+.blab{font-size:11px;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.5px}
+
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:999px;padding:9px 18px;font-size:13px;color:#cbd5e1;
+  margin-bottom:26px;min-width:210px;justify-content:center;
+}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.green{background:#4ade80}
+.yellow{background:#facc15;animation:blink .7s infinite}
+.red{background:#f43f5e;animation:blink .7s infinite}
+.blue{background:#60a5fa;animation:blink .7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.chat{
+  background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;padding:14px 16px;
+  max-height:150px;overflow-y:auto;
+  text-align:left;font-size:13px;line-height:1.65;
+  display:none;margin-bottom:24px;
+}
+.chat.show{display:block}
+.chat::-webkit-scrollbar{width:4px}
+.chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+.ai{color:#d8b4fe;margin-bottom:4px}
+.ai::before{content:"💬 "}
+.usr{color:#7dd3fc;margin-bottom:4px}
+.usr::before{content:"🎤 "}
+
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.feat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px 9px;font-size:12px;color:#94a3b8}
+.fi{font-size:18px;display:block;margin-bottom:4px}
+
+.foot{font-size:11px;color:#334155}
+.foot span{color:#475569}
+
+.waves{display:flex;gap:3px;align-items:center;justify-content:center;height:28px;margin-bottom:2px}
+.waves span{display:block;width:4px;border-radius:2px;background:rgba(255,255,255,.9);animation:wave 1s ease-in-out infinite}
+.waves span:nth-child(1){animation-delay:0s;height:10px}
+.waves span:nth-child(2){animation-delay:.15s;height:18px}
+.waves span:nth-child(3){animation-delay:.3s;height:24px}
+.waves span:nth-child(4){animation-delay:.45s;height:18px}
+.waves span:nth-child(5){animation-delay:.6s;height:10px}
+@keyframes wave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+
+#rv-badge{display:none!important} /* ocultar badge de responsivevoice */
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+
+<div class="card">
+  <div class="avatar">💇‍♀️</div>
+  <h1>Peluquería &amp; Estética</h1>
+  <p class="sub">Habla con nuestra asistente virtual para<br>reservar tu cita al instante.</p>
+
+  <div class="wrap">
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    <button class="btn" id="btn" onclick="toggle()">
+      <span class="bico" id="ico">🎙️</span>
+      <span class="blab" id="lab">Llamar</span>
+    </button>
+  </div>
+
+  <div class="pill">
+    <div class="dot green" id="dot"></div>
+    <span id="stxt">Lista para atenderte</span>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="feats">
+    <div class="feat"><span class="fi">📅</span>Reservas 24/7</div>
+    <div class="feat"><span class="fi">📱</span>SMS confirmación</div>
+    <div class="feat"><span class="fi">⏰</span>Recordatorio 1h antes</div>
+    <div class="feat"><span class="fi">🗣️</span>Voz natural en español</div>
+  </div>
+
+  <p class="foot">Demo · <span>ResponsiveVoice · Web Speech API</span></p>
+</div>
+
+<script>
+// ─── Estado ──────────────────────────────────────────────────────────────────
+let step = "idle";
+let booking = {};
+let recog = null;
+let sessionActive = false;
+let isSpeaking = false;
+let gotResult = false;   // evita que onend relance el micro tras onresult
+let silenceTimer = null;
+let listenTimer = null;
+let speakPollInterval = null;
+
+const SERVICES = {
+  "corte":       {label:"Corte de pelo",    price:"25€", dur:"30 minutos"},
+  "lavado":      {label:"Corte y lavado",   price:"35€", dur:"45 minutos"},
+  "tinte":       {label:"Tinte completo",   price:"65€", dur:"hora y media"},
+  "mechas":      {label:"Mechas",           price:"85€", dur:"2 horas"},
+  "highlights":  {label:"Mechas",           price:"85€", dur:"2 horas"},
+  "peinado":     {label:"Peinado",          price:"30€", dur:"45 minutos"},
+  "tratamiento": {label:"Tratamiento capilar",price:"45€",dur:"1 hora"},
+};
+
+// Convierte palabras numéricas en español a dígitos
+const NUMWORDS = {
+  "cero":0,"uno":1,"una":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,
+  "seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,
+  "doce":12,"trece":13,"catorce":14,"quince":15,"dieciséis":16,"dieciseis":16,
+  "diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20,
+};
+function wordsToDigits(str) {
+  return str.split(/\s+/).map(w => {
+    const n = NUMWORDS[w.toLowerCase()];
+    return n !== undefined ? String(n) : w;
+  }).join(" ");
+}
+
+// ─── TTS con ResponsiveVoice ──────────────────────────────────────────────────
+function speak(text, onDone) {
+  if (!sessionActive) return;
+
+  // Parar micrófono y timers anteriores
+  stopListening();
+  clearInterval(speakPollInterval);
+  isSpeaking = true;
+  setStatus("blue", "Hablando...");
+  showWaves(true);
+  addChat("ai", text);
+
+  responsiveVoice.cancel();
+
+  responsiveVoice.speak(text, "Spanish Female", { rate: 0.93, pitch: 1.08 });
+
+  // Polling: comprueba cada 150ms si ResponsiveVoice terminó
+  // (onend no es fiable en todos los navegadores)
+  const started = Date.now();
+  speakPollInterval = setInterval(() => {
+    const elapsed = Date.now() - started;
+    // Considerar terminado: RV dice que no está reproduciendo Y han pasado ≥800ms
+    if (elapsed > 800 && !responsiveVoice.isPlaying()) {
+      clearInterval(speakPollInterval);
+      isSpeaking = false;
+      showWaves(false);
+      if (typeof onDone === "function") { onDone(); return; }
+      if (sessionActive && step !== "done") {
+        listenTimer = setTimeout(startListening, 500);
+      }
+    }
+    // Seguridad: si lleva >30s asumimos error
+    if (elapsed > 30000) {
+      clearInterval(speakPollInterval);
+      isSpeaking = false;
+      showWaves(false);
+      if (sessionActive) listenTimer = setTimeout(startListening, 500);
+    }
+  }, 150);
+}
+
+// ─── STT con Web Speech API ──────────────────────────────────────────────────
+function stopListening() {
+  clearTimeout(silenceTimer);
+  clearTimeout(listenTimer);
+  if (recog) { try { recog.abort(); } catch(e){} recog = null; }
+}
+
+function startListening() {
+  if (!sessionActive || isSpeaking) return;
+
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R) { alert("Por favor abre esta página en Google Chrome o Microsoft Edge."); return; }
+
+  stopListening();
+  gotResult = false;
+
+  recog = new R();
+  recog.lang = "es-ES";
+  recog.continuous = false;
+  recog.interimResults = false;
+  recog.maxAlternatives = 3;
+
+  recog.onstart = () => {
+    setBtn("listening");
+    setStatus("red", "Escuchando...");
+    silenceTimer = setTimeout(() => {
+      if (sessionActive && !isSpeaking) speak(reprompt());
+    }, 9000);
+  };
+
+  recog.onresult = (e) => {
+    clearTimeout(silenceTimer);
+    gotResult = true;
+    const raw = Array.from(e.results).map(r => r[0].transcript).join(" ").trim().toLowerCase();
+    const text = wordsToDigits(raw);
+    addChat("usr", raw);
+    processInput(text);
+  };
+
+  recog.onerror = (e) => {
+    clearTimeout(silenceTimer);
+    if (!sessionActive) return;
+    if (e.error === "no-speech")   { listenTimer = setTimeout(startListening, 200); return; }
+    if (e.error === "aborted" || e.error === "interrupted") return;
+    setStatus("yellow", "No te escuché, repite...");
+    listenTimer = setTimeout(startListening, 1000);
+  };
+
+  recog.onend = () => {
+    clearTimeout(silenceTimer);
+    // Si ya procesamos resultado (speak() está corriendo), no relancar
+    if (gotResult) return;
+    if (sessionActive && !isSpeaking && step !== "done" && step !== "idle") {
+      listenTimer = setTimeout(startListening, 300);
+    }
+  };
+
+  try { recog.start(); }
+  catch(e) { listenTimer = setTimeout(startListening, 600); }
+}
+
+// ─── Flujo de conversación ───────────────────────────────────────────────────
+function processInput(text) {
+  clearTimeout(silenceTimer);
+  if (step === "service") return handleService(text);
+  if (step === "day")     return handleDay(text);
+  if (step === "time")    return handleTime(text);
+  if (step === "name")    return handleName(text);
+  if (step === "phone")   return handlePhone(text);
+  if (step === "confirm") return handleConfirm(text);
+}
+
+function handleService(text) {
+  for (const [key, svc] of Object.entries(SERVICES)) {
+    if (text.includes(key)) {
+      booking.service = svc;
+      step = "day";
+      speak(`Perfecto. ${svc.label} tiene un precio de ${svc.price} y dura aproximadamente ${svc.dur}. ¿Para qué día quieres la cita?`);
+      return;
+    }
+  }
+  speak("Claro. Tenemos corte de pelo, corte con lavado, tinte, mechas, peinado y tratamiento capilar. ¿Qué servicio te interesa?");
+}
+
+function handleDay(text) {
+  const map = {
+    lunes:"lunes", martes:"martes", "miércoles":"miércoles", miercoles:"miércoles",
+    jueves:"jueves", viernes:"viernes", "sábado":"sábado", sabado:"sábado",
+    "mañana":"mañana", hoy:"hoy", pasado:"pasado mañana",
+  };
+  for (const [k,v] of Object.entries(map)) {
+    if (text.includes(k)) { booking.day = v; step = "time"; speak(`El ${v}, perfecto. ¿A qué hora te viene mejor?`); return; }
+  }
+  const m = text.match(/(\d{1,2})/);
+  if (m) { booking.day = `el día ${m[1]}`; step = "time"; speak(`El día ${m[1]}, anotado. ¿A qué hora?`); return; }
+  speak("No te he escuchado bien. ¿Puedes decirme el día? Por ejemplo: lunes, martes, miércoles...");
+}
+
+function handleTime(text) {
+  const m = text.match(/(\d{1,2})(?:[:\s](\d{2}))?/);
+  if (m) {
+    let h = parseInt(m[1]);
+    let min = m[2] || "00";
+    if (text.includes("tarde") || text.includes("noche")) { if (h < 7) h += 12; }
+    if (text.includes("media")) min = "30";
+    if (text.includes("cuarto") && !text.includes("tres cuartos")) min = "15";
+    if (text.includes("tres cuartos")) min = "45";
+    if (h >= 9 && h <= 20) {
+      booking.time = `${String(h).padStart(2,"0")}:${min}`;
+      step = "name";
+      speak(`A las ${booking.time}. ¿Me puedes decir tu nombre completo?`);
+      return;
+    }
+  }
+  speak("Nuestro horario es de nueve a veinte horas de lunes a viernes, y de nueve a dieciocho los sábados. ¿Qué hora prefieres?");
+}
+
+function handleName(text) {
+  const stop = ["me llamo","soy","mi nombre es","llamo","nombre","es"];
+  let name = text;
+  stop.forEach(s => { name = name.replace(new RegExp("\\b"+s+"\\b","gi"),""); });
+  name = name.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+  if (name.length > 1) {
+    booking.name = name;
+    step = "phone";
+    speak(`Encantada, ${name.split(" ")[0]}. ¿Y tu número de teléfono para enviarte la confirmación?`);
+  } else {
+    speak("¿Me puedes decir tu nombre, por favor?");
+  }
+}
+
+function handlePhone(text) {
+  const digits = text.replace(/\D/g,"");
+  if (digits.length >= 9) {
+    const raw = digits.slice(-9);
+    booking.phone = raw.replace(/(\d{3})(\d{3})(\d{3})/,"$1 $2 $3");
+    step = "confirm";
+    speak(`Perfecto. Te confirmo la reserva: ${summaryText()}. ¿Es correcto?`);
+  } else {
+    speak("No he captado bien el número. Por favor, dímelo despacio.");
+  }
+}
+
+function handleConfirm(text) {
+  if (/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|eso es|confirmo|ok)\b/.test(text)) {
+    step = "done";
+    speak(
+      `¡Genial! Tu cita está reservada. Te enviaremos un mensaje de confirmación al ${booking.phone}, y otro recordatorio una hora antes. ¡Hasta pronto, ${booking.name.split(" ")[0]}!`,
+      () => setTimeout(endCall, 2800)
+    );
+  } else if (/\b(no|mal|cambia|otro|distinto)\b/.test(text)) {
+    booking = {};
+    step = "service";
+    speak("Sin problema, empezamos de nuevo. ¿Qué servicio deseas?");
+  } else {
+    speak(`Disculpa, te repito: ${summaryText()}. ¿Confirmo la cita?`);
+  }
+}
+
+function summaryText() {
+  return `${booking.service?.label} el ${booking.day} a las ${booking.time}, a nombre de ${booking.name}, teléfono ${booking.phone}`;
+}
+
+function reprompt() {
+  const r = {
+    service: "¿Qué servicio te gustaría reservar?",
+    day:     "¿Para qué día quieres la cita?",
+    time:    "¿A qué hora te viene mejor?",
+    name:    "¿Me puedes decir tu nombre?",
+    phone:   "¿Cuál es tu número de teléfono?",
+    confirm: `Te confirmo: ${summaryText()}. ¿Es correcto?`,
+  };
+  return r[step] || "¿En qué puedo ayudarte?";
+}
+
+// ─── Control de llamada ───────────────────────────────────────────────────────
+function toggle() { sessionActive ? endCall() : startCall(); }
+
+function startCall() {
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R) { alert("Por favor abre esta página en Google Chrome o Microsoft Edge."); return; }
+
+  sessionActive = true;
+  booking = {};
+  step = "service";
+
+  const btn = document.getElementById("btn");
+  btn.className = "btn active";
+  document.getElementById("ico").textContent = "⏹️";
+  document.getElementById("lab").textContent = "Colgar";
+  document.getElementById("chat").classList.add("show");
+
+  speak("¡Hola! Bienvenida a nuestra peluquería. Soy tu asistente virtual y estoy aquí para ayudarte a reservar tu cita. ¿Qué servicio te gustaría?");
+}
+
+function endCall() {
+  sessionActive = false;
+  clearTimeout(silenceTimer);
+  clearTimeout(listenTimer);
+  clearInterval(speakPollInterval);
+  responsiveVoice.cancel();
+  if (recog) { try { recog.abort(); } catch(e){} recog = null; }
+  isSpeaking = false;
+  showWaves(false);
+
+  const btn = document.getElementById("btn");
+  btn.className = "btn";
+  document.getElementById("ico").textContent = "🎙️";
+  document.getElementById("lab").textContent = "Llamar";
+  setStatus("green", step === "done" ? "¡Cita reservada! ✓" : "Llamada finalizada");
+  step = "idle";
+}
+
+// ─── UI ───────────────────────────────────────────────────────────────────────
+function setStatus(color, text) {
+  document.getElementById("dot").className = "dot "+color;
+  document.getElementById("stxt").textContent = text;
+}
+
+function setBtn(state) {
+  document.getElementById("btn").className = "btn active " + state;
+}
+
+function addChat(role, text) {
+  const box = document.getElementById("chat");
+  const el  = document.createElement("div");
+  el.className = role;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showWaves(on) {
+  const ico = document.getElementById("ico");
+  if (on) {
+    ico.innerHTML = `<div class="waves"><span></span><span></span><span></span><span></span><span></span></div>`;
+  } else {
+    ico.textContent = sessionActive ? "⏹️" : "🎙️";
+  }
+}
+</script>
+</body>
+</html>
