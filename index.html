@@ -99,6 +99,7 @@ body.active .cbtn{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:
   <div class="logo">✂️</div>
   <div class="brand"><h1>Studio 21</h1><p>Peluquería &amp; Barbería · Madrid</p></div>
   <div class="online">En línea</div>
+  <button id="elBtn" onclick="openElBox()" title="Configurar voz premium" style="background:none;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 9px;font-size:11px;color:#64748b;cursor:pointer;flex-shrink:0;transition:all .2s">🎙️ Voz</button>
 </div>
 
 <div class="card">
@@ -126,6 +127,26 @@ body.active .cbtn{background:linear-gradient(135deg,#f43f5e,#be123c);box-shadow:
   <div class="sw" id="sw">
     ⚠️ <strong>Safari no soporta reconocimiento de voz.</strong><br>
     Abre esta página en <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong>.
+  </div>
+
+  <!-- Config voz premium -->
+  <div id="elBox" style="display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center">
+    <div style="background:#13131f;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:32px 26px;max-width:360px;width:calc(100% - 32px);text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">🎙️</div>
+      <h2 style="font-size:18px;margin-bottom:8px">Voz premium — ElevenLabs</h2>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:20px;line-height:1.6">
+        Crea una cuenta gratuita en <strong style="color:#fff">elevenlabs.io</strong> (sin tarjeta),<br>
+        ve a <em>Profile → API Key</em> y pega tu clave aquí.
+      </p>
+      <input id="elInput" type="text" placeholder="sk_xxxxxxxxxxxxxxxx" autocomplete="off"
+        style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;color:#fff;font-size:13px;outline:none;margin-bottom:12px"/>
+      <button onclick="saveElKey()" style="width:100%;padding:13px;background:linear-gradient(135deg,#d4a847,#8b5e1a);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">
+        Activar voz humana
+      </button>
+      <div onclick="closeElBox()" style="font-size:12px;color:#475569;cursor:pointer;text-decoration:underline">
+        Continuar con voz del navegador
+      </div>
+    </div>
   </div>
 
   <div class="svcs" id="svcs">
@@ -190,6 +211,12 @@ function bestVox() {
 }
 
 // ══ TTS ════════════════════════════════════════════════════
+// ElevenLabs voice ID — Sarah multilingual (suena muy natural en español)
+const EL_VOICE = "EXAVITQu4vr4xnSDxMaL";
+const EL_MODEL = "eleven_multilingual_v2";
+
+let currentAudio = null;  // para poder cancelar el audio de ElevenLabs
+
 function say(text, then) {
   if (!active) return;
 
@@ -202,46 +229,74 @@ function say(text, then) {
   showDots(false);
   addMsg("ai", text);
 
-  // Cancelar síntesis anterior y esperar un tick (fix Chrome)
+  // Parar audio anterior
+  if (currentAudio) { try { currentAudio.pause(); currentAudio.src = ""; } catch(e){} currentAudio = null; }
   speechSynthesis.cancel();
   clearInterval(tResume);
 
+  function finish() {
+    if (myId !== sid) return;
+    speaking = false;
+    showWaves(false);
+    if (typeof then === "function") { then(); return; }
+    if (active && step !== S.DONE) tListen = setTimeout(startListen, 600);
+  }
+
+  const elKey = localStorage.getItem("el_key");
+
+  if (elKey) {
+    // ── Voz ElevenLabs (humana, neural) ──────────────────
+    showWaves(true);
+    fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE}/stream`, {
+      method: "POST",
+      headers: { "xi-api-key": elKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        model_id: EL_MODEL,
+        voice_settings: { stability: 0.45, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true }
+      })
+    })
+    .then(r => {
+      if (!r.ok) throw new Error("EL error " + r.status);
+      return r.blob();
+    })
+    .then(blob => {
+      if (myId !== sid) return;
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      currentAudio = audio;
+      audio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; finish(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); currentAudio = null; sayNative(text, myId, finish); };
+      audio.play().catch(() => sayNative(text, myId, finish));
+    })
+    .catch(() => { if (myId === sid) sayNative(text, myId, finish); });
+
+  } else {
+    // ── Síntesis nativa del navegador (fallback) ──────────
+    setTimeout(() => { if (myId === sid) sayNative(text, myId, finish); }, 80);
+  }
+}
+
+function sayNative(text, myId, finish) {
+  if (myId !== sid) return;
+  speechSynthesis.cancel();
+
   setTimeout(() => {
-    if (myId !== sid) return;   // otro say() ya arrancó
-
+    if (myId !== sid) return;
     const u = new SpeechSynthesisUtterance(text);
-    u.lang  = "es-ES";
-    u.rate  = 0.9;
-    u.pitch = 1.05;
-    const v = bestVox();
-    if (v) u.voice = v;
+    u.lang = "es-ES"; u.rate = 0.9; u.pitch = 1.05;
+    const v = bestVox(); if (v) u.voice = v;
 
-    // Duración estimada: ~11 chars/s + 1s buffer
     const ms = Math.max(1800, (text.length / 11) * 1000 + 1000);
     let done = false;
-
-    function finish() {
-      if (done || myId !== sid) return;
-      done = true;
-      clearInterval(tResume);
-      speaking = false;
-      showWaves(false);
-      if (typeof then === "function") { then(); return; }
-      if (active && step !== S.DONE) tListen = setTimeout(startListen, 600);
-    }
-
-    // Fallback por si onend no dispara
-    const fb = setTimeout(finish, ms);
-
-    u.onend   = () => { clearTimeout(fb); finish(); };
-    u.onerror = (e) => { if (e.error !== "canceled" && e.error !== "interrupted") { clearTimeout(fb); finish(); } };
-
-    // Fix Chrome: pausa al cambiar de pestaña
+    function fin() { if (done || myId !== sid) return; done = true; clearInterval(tResume); finish(); }
+    const fb = setTimeout(fin, ms);
+    u.onend   = () => { clearTimeout(fb); fin(); };
+    u.onerror = (e) => { if (e.error !== "canceled" && e.error !== "interrupted") { clearTimeout(fb); fin(); } };
     tResume = setInterval(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 4000);
-
     speechSynthesis.speak(u);
     showWaves(true);
-  }, 80);  // 80ms tras cancel() — necesario en Chrome
+  }, 80);
 }
 
 // ══ STT ════════════════════════════════════════════════════
@@ -396,6 +451,35 @@ function reprompt() {
 }
 
 // ══ LLAMADA ════════════════════════════════════════════════
+// ══ ELEVENLABS CONFIG UI ═══════════════════════════════════
+function openElBox() {
+  const box = document.getElementById("elBox");
+  box.style.display = "flex";
+  const k = localStorage.getItem("el_key");
+  if (k) document.getElementById("elInput").value = k;
+}
+function closeElBox() { document.getElementById("elBox").style.display = "none"; }
+function saveElKey() {
+  const k = document.getElementById("elInput").value.trim();
+  if (!k) { alert("Pega tu API key de ElevenLabs."); return; }
+  localStorage.setItem("el_key", k);
+  closeElBox();
+  updateElBtn();
+}
+function updateElBtn() {
+  const btn = document.getElementById("elBtn");
+  if (localStorage.getItem("el_key")) {
+    btn.textContent = "✅ Voz IA";
+    btn.style.color = "#4ade80";
+    btn.style.borderColor = "rgba(74,222,128,.3)";
+  } else {
+    btn.textContent = "🎙️ Voz";
+    btn.style.color = "#64748b";
+    btn.style.borderColor = "rgba(255,255,255,.12)";
+  }
+}
+updateElBtn();
+
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 if (isSafari) document.getElementById("sw").style.display = "block";
 
