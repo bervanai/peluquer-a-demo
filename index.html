@@ -353,9 +353,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
         <p>Mientras cortas, tiñes o descansas — Sofía descuelga sola y reserva la cita.</p>
       </div>
       <div class="fc">
-        <div class="fc-icon">📱</div>
-        <h4>SMS automáticos</h4>
-        <p>Confirmación al instante + recordatorio 1h antes. Adiós a los no-shows.</p>
+        <div class="fc-icon">💬</div>
+        <h4>WhatsApp automático</h4>
+        <p>Confirmación por WhatsApp al instante + recordatorio 1h antes. Adiós a los no-shows.</p>
       </div>
       <div class="fc">
         <div class="fc-icon">🗓️</div>
@@ -372,14 +372,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
     <!-- Result card (shows after booking) -->
     <div class="result-wrap" id="resultWrap">
       <div class="result-card">
-        <h3>✅ Cita confirmada — SMS enviado</h3>
+        <h3>✅ Cita confirmada — WhatsApp enviado</h3>
         <div class="res-row"><span class="k">Servicio</span><span class="v" id="r-svc">—</span></div>
         <div class="res-row"><span class="k">Día</span><span class="v" id="r-day">—</span></div>
         <div class="res-row"><span class="k">Hora</span><span class="v" id="r-time">—</span></div>
         <div class="res-row"><span class="k">Cliente</span><span class="v" id="r-name">—</span></div>
         <div class="res-row"><span class="k">Teléfono</span><span class="v" id="r-phone">—</span></div>
         <div class="sms-box">
-          <div class="sms-hd">📱 SMS enviado al cliente</div>
+          <div class="sms-hd">💬 WhatsApp enviado al cliente</div>
           <div class="sms-body" id="r-sms"></div>
         </div>
       </div>
@@ -449,7 +449,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
     <div class="hs"><div class="hs-num">📞</div><h4>Cliente llama</h4><p>A cualquier hora, cualquier día. Sofía descuelga al instante.</p></div>
     <div class="hs"><div class="hs-num">🗣️</div><h4>Elige servicio y fecha</h4><p>Sofía guía la conversación y confirma disponibilidad en tiempo real.</p></div>
     <div class="hs"><div class="hs-num">📅</div><h4>Cita en tu agenda</h4><p>Se añade automáticamente a tu Google Calendar o Cal.com.</p></div>
-    <div class="hs"><div class="hs-num">📲</div><h4>SMS de confirmación</h4><p>El cliente recibe confirmación al instante y recordatorio 1h antes.</p></div>
+    <div class="hs"><div class="hs-num">💬</div><h4>WhatsApp de confirmación</h4><p>El cliente recibe confirmación por WhatsApp al instante y recordatorio 1h antes.</p></div>
   </div>
 </div>
 
@@ -470,7 +470,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
     </div>
     <div class="tc">
       <div class="stars"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
-      <p class="tc-text">Los clientes no notan que hablan con una IA. Me dicen que Sofía es muy simpática. Y los SMS de recordatorio han reducido los no-shows a cero.</p>
+      <p class="tc-text">Los clientes no notan que hablan con una IA. Me dicen que Sofía es muy simpática. Y los WhatsApp de recordatorio han reducido los no-shows a cero.</p>
       <div class="tc-author">
         <div class="tc-av">👨</div>
         <div><div class="tc-name">Javier Ruiz</div><div class="tc-salon">Barber Club · Barcelona</div></div>
@@ -502,7 +502,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
     <div class="vc">
       <span class="vc-ico">📉</span>
       <h3>Hasta un 60% menos no-shows</h3>
-      <p>El SMS de recordatorio automático hace que los clientes <span class="vc-highlight">no se olviden</span> de su cita. Sin llamadas de seguimiento.</p>
+      <p>El WhatsApp de recordatorio automático hace que los clientes <span class="vc-highlight">no se olviden</span> de su cita. Sin llamadas de seguimiento.</p>
     </div>
     <div class="vc">
       <span class="vc-ico">💶</span>
@@ -599,10 +599,10 @@ const CAT = [
 const FAQ = {
   precio:    "Los precios van de 12 euros el corte infantil hasta 90 euros las mechas. ¿Quieres el precio de algún servicio concreto?",
   horario:   "Abrimos de lunes a viernes de 9 a 20 horas, y los sábados de 9 a 18. Los domingos estamos cerrados.",
-  ubicacion: "Estamos en Calle Gran Vía 21, Madrid, junto al metro Gran Vía. ¿Quieres que te mande las indicaciones por SMS?",
+  ubicacion: "Estamos en Calle Gran Vía 21, Madrid, junto al metro Gran Vía. ¿Quieres que te mande las indicaciones por WhatsApp?",
   parking:   "Hay aparcamiento público a 50 metros en Calle Montera, y zona azul en las calles de alrededor.",
   equipo:    "Somos cinco estilistas especializados en coloración, corte moderno y barbería clásica.",
-  cancelar:  "Puedes cancelar sin coste hasta 2 horas antes llamando al 912 345 678 o respondiendo al SMS de confirmación.",
+  cancelar:  "Puedes cancelar sin coste hasta 2 horas antes llamando al 912 345 678 o respondiendo al WhatsApp de confirmación.",
   espera:    "Con cita previa no hay espera. Sin cita, normalmente unos 10 o 15 minutos.",
   productos: "Trabajamos con Kérastase, Wella Professionals y American Crew para barbería.",
 };
@@ -633,7 +633,7 @@ const demoScript=[
   {role:"user", text:"Lucía Fernández"},
   {role:"ai",  text:"Encantada, Lucía. ¿Y tu móvil para enviarte la confirmación?"},
   {role:"user", text:"612 345 678"},
-  {role:"ai",  text:"✅ ¡Listo! Viernes a las 10, tinte, a nombre de Lucía. Te mando el SMS ahora 📱"},
+  {role:"ai",  text:"✅ ¡Listo! Viernes a las 10, tinte, a nombre de Lucía. Te mando el WhatsApp ahora 💬"},
 ];
 let autoIdx=0,autoRunning=false;
 function playAutoConv(){
@@ -698,7 +698,7 @@ function bestVox(){
       ||vox.find(v=>v.lang.startsWith("es"))||null;
 }
 
-const EL_VOICE="EXAVITQu4vr4xnSDxMaL";
+const EL_VOICE="cgSgspJ2msm6clMCkdW9"; // Jessica — voz española muy natural
 const EL_MODEL="eleven_multilingual_v2";
 
 function saveElKey(){
@@ -837,18 +837,18 @@ function doName(t){
   const stop=["me llamo","soy","mi nombre es","llamo","nombre","se llama","es"];
   let n=t;stop.forEach(s=>{n=n.replace(new RegExp("\\b"+s+"\\b","gi"),"");});
   n=n.trim().split(/\s+/).filter(w=>w.length>1).map(w=>w[0].toUpperCase()+w.slice(1)).join(" ");
-  if(n.length>1){bk.name=n;setStep(S.PHONE);return say(`Encantada, ${n.split(" ")[0]}. ¿Y tu número de móvil para la confirmación?`);}
+  if(n.length>1){bk.name=n;setStep(S.PHONE);return say(`Encantada, ${n.split(" ")[0]}. ¿Y tu número de móvil para enviarte la confirmación por WhatsApp? Dímelo número por número, despacio.`);}
   say("¿Me puedes decir tu nombre, por favor?");
 }
 function doPhone(t){
   const d=t.replace(/\D/g,"");
   if(d.length>=9){bk.phone=d.slice(-9).replace(/(\d{3})(\d{3})(\d{3})/,"$1 $2 $3");setStep(S.CONFIRM);return say(`Perfecto. Te confirmo: ${summ()}. ¿Todo correcto?`);}
-  say("No he captado bien el número. ¿Me lo repites despacio?");
+  say("Para captarlo bien, dímelo número por número, despacio. Por ejemplo: seis, uno, dos, tres, cuatro, cinco, seis, siete, ocho.");
 }
 function doConfirm(t){
   if(/\b(sí|si|claro|correcto|exacto|perfecto|bien|vale|confirmo|ok|adelante|genial|eso es)\b/.test(t)){
     setStep(S.DONE);showResultCard();
-    return say(`¡Perfecto! Tu cita en Studio 21 está confirmada. Te mandamos ahora mismo un SMS al ${bk.phone} con todos los detalles, y otro recordatorio una hora antes. ¡Hasta pronto, ${bk.name.split(" ")[0]}! 😊`,()=>setTimeout(endCall,3500));
+    return say(`¡Perfecto! Tu cita en Studio 21 está confirmada. Te mando ahora mismo un WhatsApp al ${bk.phone} con todos los detalles, y otro recordatorio una hora antes. ¡Hasta pronto, ${bk.name.split(" ")[0]}! 😊`,()=>setTimeout(endCall,3500));
   }
   if(/\b(no|mal|cambia|error|equivocado)\b/.test(t)){bk={};setStep(S.SVC);return say("Sin problema, empezamos de nuevo. ¿Qué servicio te gustaría?");}
   say(`Te confirmo: ${summ()}. Di sí para confirmar o no para corregir.`);
@@ -905,7 +905,7 @@ function showResultCard(){
   document.getElementById("r-time").textContent=bk.time||"—";
   document.getElementById("r-name").textContent=bk.name||"—";
   document.getElementById("r-phone").textContent=bk.phone||"—";
-  document.getElementById("r-sms").textContent=`✅ Cita confirmada en Studio 21!\n📅 ${bk.day} a las ${bk.time}\n💇 ${bk.svc?.n} · ${bk.svc?.p}\n\nTe avisaremos 1h antes. Para cancelar, responde CANCELAR.`;
+  document.getElementById("r-sms").textContent=`✅ Cita confirmada en Studio 21!\n📅 ${bk.day} a las ${bk.time}\n💇 ${bk.svc?.n} · ${bk.svc?.p}\n\nTe avisaremos por WhatsApp 1h antes.\nPara cancelar, responde CANCELAR.`;
   document.getElementById("resultWrap").classList.add("show");
   document.getElementById("resultWrap").scrollIntoView({behavior:"smooth",block:"nearest"});
   document.getElementById("c2").textContent=984+Math.floor(Math.random()*3);
