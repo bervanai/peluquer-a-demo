@@ -1,0 +1,13 @@
+{
+  "_comment": "Añade esto a tu ~/.claude/claude_desktop_config.json o .claude/settings.json",
+  "mcpServers": {
+    "lilygo": {
+      "command": "python",
+      "args": ["C:/ruta/a/lilygo-ai-agent/mcp_server/lilygo_mcp.py"],
+      "env": {
+        "LILYGO_HOST": "192.168.1.XX",
+        "LILYGO_PORT": "8766"
+      }
+    }
+  }
+}
