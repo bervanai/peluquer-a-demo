@@ -1,13 +1,18 @@
 /**
- * AI Agent Application - LilyGo CC1101 / Flipper Zero ESP32 Port
+ * AI Agent v2 - LilyGo CC1101 / Flipper Zero ESP32 Port
  *
- * Connects the device to a PC AI server via WebSocket.
- * Sends captures (RF, WiFi, NFC) for Claude AI analysis.
+ * Mantiene TODAS las funcionalidades del firmware Flipper Zero y añade:
+ *  - Servidor WebSocket en puerto 8766 (recibe comandos del MCP de Claude)
+ *  - Cliente WebSocket en puerto 8765 (envía capturas al servidor Python)
+ *  - Auto-análisis: cada captura RF/NFC/WiFi se manda automáticamente a Claude
+ *  - Resultados de IA mostrados en pantalla con overlay sobre el UI normal
+ *  - Menú AI Agent integrado en el menú principal
  *
- * INSTALL:
- *   Copy this file to: applications_user/ai_agent/
- *   Add entry to fam_config.py (see ai_agent_fam.py)
- *   Rebuild firmware
+ * INSTALAR:
+ *   cp ai_agent_app.c  <repo>/applications_user/ai_agent/
+ *   cp mcp_ws_server.c <repo>/applications_user/ai_agent/
+ *   Añadir a fam_config.py (ver ai_agent_fam.py)
+ *   ./build.sh lilygo-t-embed-cc1101
  */
 
 #include <furi.h>
@@ -18,498 +23,557 @@
 #include <gui/modules/text_input.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/loading.h>
+#include <gui/modules/widget.h>
 #include <storage/storage.h>
+#include <notification/notification_messages.h>
 #include <esp_websocket_client.h>
 #include <esp_wifi.h>
+#include <esp_timer.h>
 #include <cJSON.h>
 #include <string.h>
 #include <stdio.h>
 
-#define AI_AGENT_TAG "AIAgent"
-#define WS_URI_MAX   128
-#define MSG_MAX      2048
-#define RESULT_MAX   512
-#define SETTINGS_PATH "/ext/ai_agent/settings.json"
-#define CAPTURES_PATH "/ext/ai_agent/captures/"
+/* ─── Constantes ─────────────────────────────────────────────────────────── */
 
-/* ─── State ─────────────────────────────────────────────── */
+#define AI_TAG          "AIAgent"
+#define WS_URI_MAX      128
+#define RESULT_MAX      600
+#define SETTINGS_PATH   "/ext/ai_agent/settings.json"
+#define AI_LOG_PATH     "/ext/ai_agent/ai_log.jsonl"
+#define AUTO_ANALYZE    true   /* Analizar automáticamente cada captura */
 
-typedef enum {
-    AIAgentStateMenu,
-    AIAgentStateConnect,
-    AIAgentStateConnected,
-    AIAgentStateAnalyzing,
-    AIAgentStateResult,
-    AIAgentStateSettings,
-} AIAgentState;
+/* ─── Estados ────────────────────────────────────────────────────────────── */
 
 typedef enum {
-    MenuAnalyzeLastRF = 0,
-    MenuAnalyzeLastWiFi,
-    MenuAnalyzeLastNFC,
+    ViewMenu = 0,
+    ViewResult,
+    ViewLoading,
+    ViewSettings,
+    ViewLog,
+} ViewID;
+
+typedef enum {
+    MenuAnalyzeRF = 0,
+    MenuAnalyzeNFC,
+    MenuAnalyzeWiFi,
     MenuBruteforce,
-    MenuSavedCaptures,
+    MenuSpectrum,
+    MenuAutoMode,
+    MenuViewLog,
     MenuSettings,
     MenuDisconnect,
-} MenuIndex;
+} MenuIdx;
 
 typedef struct {
     /* UI */
     Gui*            gui;
-    ViewDispatcher* view_dispatcher;
+    ViewDispatcher* vd;
     Submenu*        menu;
     Popup*          popup;
     Loading*        loading;
     TextInput*      text_input;
+    Widget*         log_widget;
 
-    /* WebSocket */
-    esp_websocket_client_handle_t ws_client;
-    bool  connected;
-    bool  waiting_response;
+    /* WebSocket (cliente → servidor Python) */
+    esp_websocket_client_handle_t ws_out;
+    bool  ws_out_connected;
 
-    /* Data */
-    char  server_uri[WS_URI_MAX];
+    /* Configuración */
     char  server_ip[64];
-    char  result_text[RESULT_MAX];
-    AIAgentState state;
+    char  server_uri[WS_URI_MAX];
+    char  mcp_uri[WS_URI_MAX];  /* URI para el servidor MCP (puerto 8766) */
 
-    /* Task handle */
-    FuriThread* ws_thread;
-} AIAgentApp;
+    /* Estado */
+    char  result[RESULT_MAX];
+    bool  auto_mode;            /* Si true, analiza cada captura automáticamente */
+    bool  waiting_ai;
+    uint32_t captures_count;
+    uint32_t ai_requests_count;
+} AIApp;
 
-/* ─── Settings ───────────────────────────────────────────── */
+/* ─── Persistencia ───────────────────────────────────────────────────────── */
 
-static void ai_agent_load_settings(AIAgentApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* f = storage_file_alloc(storage);
-
+static void settings_load(AIApp* app) {
     snprintf(app->server_ip, sizeof(app->server_ip), "192.168.1.100");
+    app->auto_mode = AUTO_ANALYZE;
 
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    File* f = storage_file_alloc(st);
     if(storage_file_open(f, SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char buf[256] = {0};
+        char buf[384] = {0};
         storage_file_read(f, buf, sizeof(buf) - 1);
         storage_file_close(f);
-
-        cJSON* root = cJSON_Parse(buf);
-        if(root) {
-            cJSON* ip = cJSON_GetObjectItem(root, "server_ip");
-            if(ip && cJSON_IsString(ip))
-                snprintf(app->server_ip, sizeof(app->server_ip), "%s", ip->valuestring);
-            cJSON_Delete(root);
+        cJSON* r = cJSON_Parse(buf);
+        if(r) {
+            cJSON* ip   = cJSON_GetObjectItem(r, "server_ip");
+            cJSON* amod = cJSON_GetObjectItem(r, "auto_mode");
+            if(ip   && cJSON_IsString(ip))  snprintf(app->server_ip, sizeof(app->server_ip), "%s", ip->valuestring);
+            if(amod && cJSON_IsBool(amod))  app->auto_mode = cJSON_IsTrue(amod);
+            cJSON_Delete(r);
         }
     }
-
     storage_file_free(f);
     furi_record_close(RECORD_STORAGE);
 
     snprintf(app->server_uri, sizeof(app->server_uri), "ws://%s:8765", app->server_ip);
+    snprintf(app->mcp_uri,    sizeof(app->mcp_uri),    "ws://%s:8766", app->server_ip);
 }
 
-static void ai_agent_save_settings(AIAgentApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_common_mkdir(storage, "/ext/ai_agent");
-
-    File* f = storage_file_alloc(storage);
+static void settings_save(AIApp* app) {
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(st, "/ext/ai_agent");
+    File* f = storage_file_alloc(st);
     if(storage_file_open(f, SETTINGS_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-        cJSON* root = cJSON_CreateObject();
-        cJSON_AddStringToObject(root, "server_ip", app->server_ip);
-        char* out = cJSON_PrintUnformatted(root);
+        cJSON* r = cJSON_CreateObject();
+        cJSON_AddStringToObject(r, "server_ip", app->server_ip);
+        cJSON_AddBoolToObject(r,  "auto_mode",  app->auto_mode);
+        char* out = cJSON_PrintUnformatted(r);
         storage_file_write(f, out, strlen(out));
         free(out);
-        cJSON_Delete(root);
+        cJSON_Delete(r);
         storage_file_close(f);
     }
-
     storage_file_free(f);
     furi_record_close(RECORD_STORAGE);
 }
 
-/* ─── WebSocket ──────────────────────────────────────────── */
+static void log_event(const char* event_type, const char* summary) {
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    File* f = storage_file_alloc(st);
+    if(storage_file_open(f, AI_LOG_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
+        cJSON* entry = cJSON_CreateObject();
+        cJSON_AddStringToObject(entry, "type", event_type);
+        cJSON_AddStringToObject(entry, "summary", summary);
+        char* out = cJSON_PrintUnformatted(entry);
+        storage_file_write(f, out, strlen(out));
+        storage_file_write(f, "\n", 1);
+        free(out);
+        cJSON_Delete(entry);
+        storage_file_close(f);
+    }
+    storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+}
 
-static void ws_event_handler(void* handler_args,
-                              esp_event_base_t base,
-                              int32_t event_id,
-                              void* event_data)
-{
-    AIAgentApp* app = (AIAgentApp*)handler_args;
-    esp_websocket_event_data_t* data = (esp_websocket_event_data_t*)event_data;
+/* ─── WebSocket (salida → servidor Python) ───────────────────────────────── */
+
+static void ws_event_handler(void* arg, esp_event_base_t base,
+                              int32_t event_id, void* event_data) {
+    AIApp* app = (AIApp*)arg;
+    esp_websocket_event_data_t* d = (esp_websocket_event_data_t*)event_data;
 
     switch(event_id) {
     case WEBSOCKET_EVENT_CONNECTED:
-        FURI_LOG_I(AI_AGENT_TAG, "WebSocket connected");
-        app->connected = true;
+        app->ws_out_connected = true;
+        FURI_LOG_I(AI_TAG, "WS connected to AI server");
         break;
 
     case WEBSOCKET_EVENT_DISCONNECTED:
-        FURI_LOG_I(AI_AGENT_TAG, "WebSocket disconnected");
-        app->connected = false;
+        app->ws_out_connected = false;
         break;
 
     case WEBSOCKET_EVENT_DATA:
-        if(data->data_ptr && data->data_len > 0) {
-            char* buf = malloc(data->data_len + 1);
+        if(d->data_ptr && d->data_len > 0) {
+            char* buf = malloc(d->data_len + 1);
             if(buf) {
-                memcpy(buf, data->data_ptr, data->data_len);
-                buf[data->data_len] = '\0';
+                memcpy(buf, d->data_ptr, d->data_len);
+                buf[d->data_len] = '\0';
 
                 cJSON* root = cJSON_Parse(buf);
                 if(root) {
-                    cJSON* summary = cJSON_GetObjectItem(root, "summary");
-                    cJSON* analysis = cJSON_GetObjectItem(root, "analysis");
-                    cJSON* message  = cJSON_GetObjectItem(root, "message");
-
-                    const char* text = NULL;
-                    if(summary && cJSON_IsString(summary))       text = summary->valuestring;
-                    else if(message && cJSON_IsString(message))  text = message->valuestring;
-                    else if(analysis && cJSON_IsString(analysis)) text = analysis->valuestring;
-
-                    if(text) snprintf(app->result_text, RESULT_MAX, "%s", text);
+                    /* Prioridad: summary > analysis > message */
+                    const char* fields[] = {"summary", "analysis", "message", NULL};
+                    for(int i = 0; fields[i]; i++) {
+                        cJSON* j = cJSON_GetObjectItem(root, fields[i]);
+                        if(j && cJSON_IsString(j)) {
+                            snprintf(app->result, RESULT_MAX, "%s", j->valuestring);
+                            log_event("ai_response", app->result);
+                            break;
+                        }
+                    }
+                    /* Bruteforce: mostrar códigos generados */
+                    cJSON* seqs = cJSON_GetObjectItem(root, "sequences");
+                    if(seqs && cJSON_IsArray(seqs)) {
+                        int n = cJSON_GetArraySize(seqs);
+                        snprintf(app->result, RESULT_MAX, "Claude generó %d códigos.\nEjecutando...", n);
+                        /* TODO: pasar al módulo SubGHz para transmisión */
+                    }
                     cJSON_Delete(root);
                 }
                 free(buf);
-                app->waiting_response = false;
+                app->waiting_ai = false;
+                app->ai_requests_count++;
+
+                /* Vibración corta cuando llega respuesta de IA */
+                NotificationApp* notif = furi_record_open(RECORD_NOTIFICATION);
+                notification_message(notif, &sequence_single_vibro);
+                furi_record_close(RECORD_NOTIFICATION);
             }
         }
         break;
 
-    default:
-        break;
+    default: break;
     }
 }
 
-static bool ai_agent_ws_connect(AIAgentApp* app) {
+static bool ws_connect(AIApp* app) {
+    if(app->ws_out_connected) return true;
     esp_websocket_client_config_t cfg = {
-        .uri = app->server_uri,
-        .reconnect_timeout_ms = 3000,
-        .network_timeout_ms   = 5000,
+        .uri                  = app->server_uri,
+        .reconnect_timeout_ms = 4000,
+        .network_timeout_ms   = 6000,
     };
-
-    app->ws_client = esp_websocket_client_init(&cfg);
-    esp_websocket_register_events(app->ws_client, WEBSOCKET_EVENT_ANY,
-                                   ws_event_handler, app);
-    return esp_websocket_client_start(app->ws_client) == ESP_OK;
+    app->ws_out = esp_websocket_client_init(&cfg);
+    esp_websocket_register_events(app->ws_out, WEBSOCKET_EVENT_ANY, ws_event_handler, app);
+    return esp_websocket_client_start(app->ws_out) == ESP_OK;
 }
 
-static void ai_agent_ws_disconnect(AIAgentApp* app) {
-    if(app->ws_client) {
-        esp_websocket_client_stop(app->ws_client);
-        esp_websocket_client_destroy(app->ws_client);
-        app->ws_client  = NULL;
-        app->connected  = false;
+static void ws_disconnect(AIApp* app) {
+    if(app->ws_out) {
+        esp_websocket_client_stop(app->ws_out);
+        esp_websocket_client_destroy(app->ws_out);
+        app->ws_out           = NULL;
+        app->ws_out_connected = false;
     }
 }
 
-static bool ai_agent_send(AIAgentApp* app, const char* json_str) {
-    if(!app->connected || !app->ws_client) return false;
-    app->waiting_response = true;
-    int ret = esp_websocket_client_send_text(app->ws_client, json_str, strlen(json_str), pdMS_TO_TICKS(3000));
-    return ret >= 0;
+static bool ws_send(AIApp* app, const char* json) {
+    if(!app->ws_out_connected) return false;
+    app->waiting_ai = true;
+    app->captures_count++;
+    return esp_websocket_client_send_text(app->ws_out, json, strlen(json), pdMS_TO_TICKS(4000)) >= 0;
 }
 
-/* ─── Capture helpers ────────────────────────────────────── */
+/* ─── Lectura de archivos ────────────────────────────────────────────────── */
 
-/* Read last SubGHz capture from SD card and send to AI */
-static void ai_analyze_last_rf(AIAgentApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* f = storage_file_alloc(storage);
+typedef struct { char path[256]; char content[2048]; } FileData;
 
-    /* Find most recent .sub file */
-    const char* sub_dir = "/ext/subghz";
+static bool read_newest(const char* dir, FileData* out) {
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    File* f = storage_file_alloc(st);
     FileInfo info;
-    char filepath[256];
-    char newest[256] = {0};
     uint64_t newest_ts = 0;
+    out->path[0] = '\0';
 
-    if(storage_dir_open(f, sub_dir)) {
+    if(storage_dir_open(f, dir)) {
         char fname[128];
         while(storage_dir_read(f, &info, fname, sizeof(fname))) {
-            if(!(info.flags & FSF_DIRECTORY)) {
-                snprintf(filepath, sizeof(filepath), "%s/%s", sub_dir, fname);
-                if(info.modified_date > newest_ts) {
-                    newest_ts = info.modified_date;
-                    snprintf(newest, sizeof(newest), "%s", filepath);
-                }
+            if(!(info.flags & FSF_DIRECTORY) && info.modified_date > newest_ts) {
+                newest_ts = info.modified_date;
+                snprintf(out->path, sizeof(out->path), "%s/%s", dir, fname);
             }
         }
         storage_dir_close(f);
     }
 
-    if(strlen(newest) == 0) {
-        snprintf(app->result_text, RESULT_MAX, "No SubGHz captures found.\nCapture a signal first.");
-        storage_file_free(f);
-        furi_record_close(RECORD_STORAGE);
+    bool ok = false;
+    if(strlen(out->path) && storage_file_open(f, out->path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_read(f, out->content, sizeof(out->content) - 1);
+        storage_file_close(f);
+        ok = true;
+    }
+
+    storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+    return ok;
+}
+
+/* ─── Envíos al servidor AI ──────────────────────────────────────────────── */
+
+static void send_rf(AIApp* app) {
+    FileData fd = {0};
+    if(!read_newest("/ext/subghz", &fd)) {
+        snprintf(app->result, RESULT_MAX, "Sin capturas RF.\nUsa SubGHz primero.");
         return;
     }
-
-    char content[1024] = {0};
-    if(storage_file_open(f, newest, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        storage_file_read(f, content, sizeof(content) - 1);
-        storage_file_close(f);
-    }
-
-    storage_file_free(f);
-    furi_record_close(RECORD_STORAGE);
-
     cJSON* root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "type", "rf_capture");
-    cJSON* data = cJSON_CreateObject();
-    cJSON_AddStringToObject(data, "file", newest);
-    cJSON_AddStringToObject(data, "content", content);
-    cJSON_AddItemToObject(root, "data", data);
-
+    cJSON* d = cJSON_CreateObject();
+    cJSON_AddStringToObject(d, "file",    fd.path);
+    cJSON_AddStringToObject(d, "content", fd.content);
+    cJSON_AddItemToObject(root, "data", d);
     char* msg = cJSON_PrintUnformatted(root);
-    ai_agent_send(app, msg);
+    if(!ws_send(app, msg))
+        snprintf(app->result, RESULT_MAX, "Error enviando.\nConecta primero.");
+    else
+        snprintf(app->result, RESULT_MAX, "Enviando a Claude AI...\nEspera respuesta.");
     free(msg);
     cJSON_Delete(root);
+    log_event("rf_sent", fd.path);
 }
 
-static void ai_analyze_last_wifi(AIAgentApp* app) {
-    /* Read last WiFi scan result - stored by the WiFi app as JSON */
-    const char* scan_file = "/ext/wifi/last_scan.json";
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* f = storage_file_alloc(storage);
-    char content[2048] = {0};
-
-    if(storage_file_open(f, scan_file, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        storage_file_read(f, content, sizeof(content) - 1);
-        storage_file_close(f);
-    } else {
-        snprintf(content, sizeof(content), "{\"note\":\"No saved scan. Run WiFi Scanner first.\"}");
+static void send_nfc(AIApp* app) {
+    FileData fd = {0};
+    if(!read_newest("/ext/nfc", &fd)) {
+        snprintf(app->result, RESULT_MAX, "Sin dumps NFC.\nUsa NFC Reader primero.");
+        return;
     }
-
-    storage_file_free(f);
-    furi_record_close(RECORD_STORAGE);
-
-    cJSON* root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "type", "wifi_scan");
-    cJSON* data = cJSON_Parse(content);
-    if(data) cJSON_AddItemToObject(root, "data", data);
-    else     cJSON_AddStringToObject(root, "data", content);
-
-    char* msg = cJSON_PrintUnformatted(root);
-    ai_agent_send(app, msg);
-    free(msg);
-    cJSON_Delete(root);
-}
-
-static void ai_analyze_last_nfc(AIAgentApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* f = storage_file_alloc(storage);
-
-    const char* nfc_dir = "/ext/nfc";
-    FileInfo info;
-    char filepath[256];
-    char newest[256] = {0};
-    uint64_t newest_ts = 0;
-
-    if(storage_dir_open(f, nfc_dir)) {
-        char fname[128];
-        while(storage_dir_read(f, &info, fname, sizeof(fname))) {
-            if(!(info.flags & FSF_DIRECTORY) && strstr(fname, ".nfc")) {
-                snprintf(filepath, sizeof(filepath), "%s/%s", nfc_dir, fname);
-                if(info.modified_date > newest_ts) {
-                    newest_ts = info.modified_date;
-                    snprintf(newest, sizeof(newest), "%s", filepath);
-                }
-            }
-        }
-        storage_dir_close(f);
-    }
-
-    char content[2048] = {0};
-    if(strlen(newest) && storage_file_open(f, newest, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        storage_file_read(f, content, sizeof(content) - 1);
-        storage_file_close(f);
-    } else {
-        snprintf(content, sizeof(content), "No NFC capture found.");
-    }
-
-    storage_file_free(f);
-    furi_record_close(RECORD_STORAGE);
-
     cJSON* root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "type", "nfc_dump");
-    cJSON* data = cJSON_CreateObject();
-    cJSON_AddStringToObject(data, "file", newest);
-    cJSON_AddStringToObject(data, "raw", content);
-    cJSON_AddItemToObject(root, "data", data);
-
+    cJSON* d = cJSON_CreateObject();
+    cJSON_AddStringToObject(d, "file",    fd.path);
+    cJSON_AddStringToObject(d, "raw",     fd.content);
+    cJSON_AddItemToObject(root, "data", d);
     char* msg = cJSON_PrintUnformatted(root);
-    ai_agent_send(app, msg);
+    ws_send(app, msg);
+    snprintf(app->result, RESULT_MAX, "NFC enviado a Claude AI...");
     free(msg);
     cJSON_Delete(root);
+    log_event("nfc_sent", fd.path);
 }
 
-static void ai_request_bruteforce(AIAgentApp* app) {
+static void send_wifi(AIApp* app) {
+    FileData fd = {0};
+    /* WiFi scan se guarda como last_scan.json */
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    File* f = storage_file_alloc(st);
+    snprintf(fd.path, sizeof(fd.path), "/ext/wifi/last_scan.json");
+    bool ok = false;
+    if(storage_file_open(f, fd.path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_read(f, fd.content, sizeof(fd.content) - 1);
+        storage_file_close(f);
+        ok = true;
+    }
+    storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+
+    if(!ok) {
+        snprintf(app->result, RESULT_MAX, "Sin escaneo WiFi.\nUsa WiFi Scanner primero.");
+        return;
+    }
+    cJSON* root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "wifi_scan");
+    cJSON* data = cJSON_Parse(fd.content);
+    if(data) cJSON_AddItemToObject(root, "data", data);
+    else     cJSON_AddStringToObject(root, "data", fd.content);
+    char* msg = cJSON_PrintUnformatted(root);
+    ws_send(app, msg);
+    snprintf(app->result, RESULT_MAX, "WiFi scan enviado a Claude...");
+    free(msg);
+    cJSON_Delete(root);
+    log_event("wifi_sent", fd.path);
+}
+
+static void request_bruteforce(AIApp* app) {
     cJSON* root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "type", "command");
     cJSON_AddStringToObject(root, "cmd",  "generate_bruteforce");
-    cJSON_AddStringToObject(root, "protocol", "OOK");
+    /* Detectar protocolo del último .sub */
+    FileData fd = {0};
+    if(read_newest("/ext/subghz", &fd)) {
+        /* Parsear protocolo del archivo .sub */
+        char* proto = strstr(fd.content, "Preset:");
+        if(proto) {
+            char proto_name[32] = {0};
+            sscanf(proto + 8, "%31s", proto_name);
+            cJSON_AddStringToObject(root, "protocol", proto_name);
+        } else {
+            cJSON_AddStringToObject(root, "protocol", "OOK");
+        }
+    } else {
+        cJSON_AddStringToObject(root, "protocol", "OOK");
+    }
     cJSON_AddNumberToObject(root, "bits", 24);
-
+    cJSON_AddNumberToObject(root, "frequency_mhz", 433.92);
     char* msg = cJSON_PrintUnformatted(root);
-    ai_agent_send(app, msg);
+    ws_send(app, msg);
+    snprintf(app->result, RESULT_MAX, "Claude genera códigos\ninteligentes...");
     free(msg);
     cJSON_Delete(root);
 }
 
-/* ─── Menu callbacks ─────────────────────────────────────── */
+static void request_spectrum(AIApp* app) {
+    cJSON* root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "command");
+    cJSON_AddStringToObject(root, "cmd",  "rf_spectrum");
+    cJSON_AddNumberToObject(root, "start_mhz", 300.0);
+    cJSON_AddNumberToObject(root, "end_mhz",   928.0);
+    char* msg = cJSON_PrintUnformatted(root);
+    ws_send(app, msg);
+    snprintf(app->result, RESULT_MAX, "Analizando espectro RF...");
+    free(msg);
+    cJSON_Delete(root);
+}
 
-static void menu_callback(void* ctx, uint32_t index) {
-    AIAgentApp* app = (AIAgentApp*)ctx;
+/* ─── Auto-mode hook ─────────────────────────────────────────────────────── */
 
-    switch((MenuIndex)index) {
-    case MenuAnalyzeLastRF:
-        if(!app->connected) {
-            snprintf(app->result_text, RESULT_MAX, "Not connected.\nGo to Settings first.");
-        } else {
-            snprintf(app->result_text, RESULT_MAX, "Sending to Claude AI...");
-            ai_analyze_last_rf(app);
-        }
-        break;
+/* Llamar desde el hook de captura completada en SubGHz/NFC/WiFi apps */
+void ai_agent_auto_analyze(AIApp* app, const char* type) {
+    if(!app || !app->auto_mode || !app->ws_out_connected) return;
+    if(strcmp(type, "rf")   == 0) send_rf(app);
+    if(strcmp(type, "nfc")  == 0) send_nfc(app);
+    if(strcmp(type, "wifi") == 0) send_wifi(app);
+}
 
-    case MenuAnalyzeLastWiFi:
-        if(!app->connected) {
-            snprintf(app->result_text, RESULT_MAX, "Not connected.\nGo to Settings first.");
-        } else {
-            snprintf(app->result_text, RESULT_MAX, "Sending WiFi scan to AI...");
-            ai_analyze_last_wifi(app);
-        }
-        break;
+/* ─── UI ─────────────────────────────────────────────────────────────────── */
 
-    case MenuAnalyzeLastNFC:
-        if(!app->connected) {
-            snprintf(app->result_text, RESULT_MAX, "Not connected.\nGo to Settings first.");
-        } else {
-            snprintf(app->result_text, RESULT_MAX, "Sending NFC dump to AI...");
-            ai_analyze_last_nfc(app);
-        }
-        break;
+static void show_result(AIApp* app) {
+    popup_set_text(app->popup, app->result, 64, 38, AlignCenter, AlignCenter);
+    view_dispatcher_switch_to_view(app->vd, ViewResult);
+}
 
-    case MenuBruteforce:
-        if(!app->connected) {
-            snprintf(app->result_text, RESULT_MAX, "Not connected.");
-        } else {
-            snprintf(app->result_text, RESULT_MAX, "Requesting smart codes...");
-            ai_request_bruteforce(app);
-        }
-        break;
+static void menu_cb(void* ctx, uint32_t idx) {
+    AIApp* app = (AIApp*)ctx;
+    bool need_conn = (idx != MenuSettings && idx != MenuDisconnect && idx != MenuAutoMode && idx != MenuViewLog);
 
-    case MenuSettings:
-        /* Switch to text input for server IP */
-        view_dispatcher_switch_to_view(app->view_dispatcher, 3);
+    if(need_conn && !app->ws_out_connected) {
+        snprintf(app->result, RESULT_MAX,
+            "No conectado.\nIr a Settings primero.\n\nIP: %s", app->server_ip);
+        show_result(app);
         return;
+    }
 
+    switch((MenuIdx)idx) {
+    case MenuAnalyzeRF:
+        snprintf(app->result, RESULT_MAX, "Enviando RF a Claude AI...");
+        show_result(app);
+        send_rf(app);
+        break;
+    case MenuAnalyzeNFC:
+        snprintf(app->result, RESULT_MAX, "Enviando NFC a Claude AI...");
+        show_result(app);
+        send_nfc(app);
+        break;
+    case MenuAnalyzeWiFi:
+        snprintf(app->result, RESULT_MAX, "Enviando WiFi a Claude AI...");
+        show_result(app);
+        send_wifi(app);
+        break;
+    case MenuBruteforce:
+        snprintf(app->result, RESULT_MAX, "Generando códigos\ncon Claude AI...");
+        show_result(app);
+        request_bruteforce(app);
+        break;
+    case MenuSpectrum:
+        snprintf(app->result, RESULT_MAX, "Analizando espectro RF...");
+        show_result(app);
+        request_spectrum(app);
+        break;
+    case MenuAutoMode:
+        app->auto_mode = !app->auto_mode;
+        settings_save(app);
+        snprintf(app->result, RESULT_MAX,
+            "Modo automático: %s\n\nCada captura se enviará\nautomáticamente a Claude.",
+            app->auto_mode ? "ACTIVADO" : "DESACTIVADO");
+        show_result(app);
+        break;
+    case MenuViewLog:
+        snprintf(app->result, RESULT_MAX,
+            "Capturas: %lu\nConsultas IA: %lu\nConectado: %s",
+            (unsigned long)app->captures_count,
+            (unsigned long)app->ai_requests_count,
+            app->ws_out_connected ? "SI" : "NO");
+        show_result(app);
+        break;
+    case MenuSettings:
+        view_dispatcher_switch_to_view(app->vd, ViewSettings);
+        return;
     case MenuDisconnect:
-        ai_agent_ws_disconnect(app);
-        snprintf(app->result_text, RESULT_MAX, "Disconnected from AI server.");
-        break;
-
-    default:
+        ws_disconnect(app);
+        snprintf(app->result, RESULT_MAX, "Desconectado del\nservidor AI.");
+        show_result(app);
         break;
     }
-
-    popup_set_text(app->popup, app->result_text, 64, 32, AlignCenter, AlignCenter);
-    view_dispatcher_switch_to_view(app->view_dispatcher, 1);
 }
 
-static uint32_t popup_back_callback(void* ctx) {
-    UNUSED(ctx);
-    return 0; /* return to menu view */
-}
+static uint32_t back_to_menu(void* ctx) { UNUSED(ctx); return ViewMenu; }
 
-static void text_input_callback(void* ctx) {
-    AIAgentApp* app = (AIAgentApp*)ctx;
-    ai_agent_save_settings(app);
+static void settings_done_cb(void* ctx) {
+    AIApp* app = (AIApp*)ctx;
+    settings_save(app);
     snprintf(app->server_uri, sizeof(app->server_uri), "ws://%s:8765", app->server_ip);
+    snprintf(app->mcp_uri,    sizeof(app->mcp_uri),    "ws://%s:8766", app->server_ip);
 
-    /* Connect */
-    snprintf(app->result_text, RESULT_MAX, "Connecting to\n%s...", app->server_ip);
-    popup_set_text(app->popup, app->result_text, 64, 32, AlignCenter, AlignCenter);
-    view_dispatcher_switch_to_view(app->view_dispatcher, 1);
+    snprintf(app->result, RESULT_MAX, "Conectando a\n%s...", app->server_ip);
+    show_result(app);
 
-    ai_agent_ws_connect(app);
-
-    /* Wait briefly for connection */
-    furi_delay_ms(1500);
-    if(app->connected) {
-        snprintf(app->result_text, RESULT_MAX, "Connected!\nClaude AI ready.");
+    if(ws_connect(app)) {
+        furi_delay_ms(1500);
+        if(app->ws_out_connected)
+            snprintf(app->result, RESULT_MAX, "Conectado!\nClaude AI listo.\n\nAuto-mode: %s",
+                app->auto_mode ? "ON" : "OFF");
+        else
+            snprintf(app->result, RESULT_MAX, "Conexión fallida.\nVerifica IP y servidor.");
     } else {
-        snprintf(app->result_text, RESULT_MAX, "Connection failed.\nCheck IP and server.");
+        snprintf(app->result, RESULT_MAX, "Error al iniciar\nconexión WebSocket.");
     }
-    popup_set_text(app->popup, app->result_text, 64, 32, AlignCenter, AlignCenter);
+    popup_set_text(app->popup, app->result, 64, 38, AlignCenter, AlignCenter);
 }
 
-/* ─── App lifecycle ──────────────────────────────────────── */
+/* ─── App lifecycle ──────────────────────────────────────────────────────── */
 
-static AIAgentApp* ai_agent_app_alloc(void) {
-    AIAgentApp* app = malloc(sizeof(AIAgentApp));
-    memset(app, 0, sizeof(AIAgentApp));
+static AIApp* app_alloc(void) {
+    AIApp* app = malloc(sizeof(AIApp));
+    memset(app, 0, sizeof(AIApp));
 
     app->gui = furi_record_open(RECORD_GUI);
-    app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
-    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+    app->vd  = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->vd);
+    view_dispatcher_attach_to_gui(app->vd, app->gui, ViewDispatcherTypeFullscreen);
 
-    /* Menu view (id=0) */
+    /* Menú */
     app->menu = submenu_alloc();
-    submenu_add_item(app->menu, "Analyze Last RF",   MenuAnalyzeLastRF,   menu_callback, app);
-    submenu_add_item(app->menu, "Analyze Last WiFi", MenuAnalyzeLastWiFi, menu_callback, app);
-    submenu_add_item(app->menu, "Analyze Last NFC",  MenuAnalyzeLastNFC,  menu_callback, app);
-    submenu_add_item(app->menu, "Smart Bruteforce",  MenuBruteforce,      menu_callback, app);
-    submenu_add_item(app->menu, "Settings / Connect",MenuSettings,        menu_callback, app);
-    submenu_add_item(app->menu, "Disconnect",        MenuDisconnect,      menu_callback, app);
+    submenu_set_header(app->menu, "AI Agent v2");
+    submenu_add_item(app->menu, "Analizar RF",      MenuAnalyzeRF,   menu_cb, app);
+    submenu_add_item(app->menu, "Analizar NFC",     MenuAnalyzeNFC,  menu_cb, app);
+    submenu_add_item(app->menu, "Analizar WiFi",    MenuAnalyzeWiFi, menu_cb, app);
+    submenu_add_item(app->menu, "Bruteforce IA",    MenuBruteforce,  menu_cb, app);
+    submenu_add_item(app->menu, "Espectro RF",      MenuSpectrum,    menu_cb, app);
+    submenu_add_item(app->menu, "Auto-mode ON/OFF", MenuAutoMode,    menu_cb, app);
+    submenu_add_item(app->menu, "Ver estadísticas", MenuViewLog,     menu_cb, app);
+    submenu_add_item(app->menu, "Ajustes / Conectar", MenuSettings,  menu_cb, app);
+    submenu_add_item(app->menu, "Desconectar",      MenuDisconnect,  menu_cb, app);
+    view_dispatcher_add_view(app->vd, ViewMenu, submenu_get_view(app->menu));
 
-    view_dispatcher_add_view(app->view_dispatcher, 0, submenu_get_view(app->menu));
-
-    /* Popup view (id=1) - shows AI results */
+    /* Popup (resultados) */
     app->popup = popup_alloc();
-    popup_set_header(app->popup, "AI Agent", 64, 8, AlignCenter, AlignTop);
-    popup_set_callback(app->popup, popup_back_callback);
+    popup_set_header(app->popup, "Claude AI", 64, 6, AlignCenter, AlignTop);
+    popup_set_callback(app->popup, back_to_menu);
     popup_set_context(app->popup, app);
-    view_dispatcher_add_view(app->view_dispatcher, 1, popup_get_view(app->popup));
+    view_dispatcher_add_view(app->vd, ViewResult, popup_get_view(app->popup));
 
-    /* Loading view (id=2) */
+    /* Loading */
     app->loading = loading_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, 2, loading_get_view(app->loading));
+    view_dispatcher_add_view(app->vd, ViewLoading, loading_get_view(app->loading));
 
-    /* Text input for IP (id=3) */
+    /* Text input (IP del servidor) */
     app->text_input = text_input_alloc();
-    text_input_set_header_text(app->text_input, "Server IP:");
-    text_input_set_result_callback(app->text_input, text_input_callback, app,
+    text_input_set_header_text(app->text_input, "IP del servidor AI:");
+    text_input_set_result_callback(app->text_input, settings_done_cb, app,
                                     app->server_ip, sizeof(app->server_ip), true);
-    view_dispatcher_add_view(app->view_dispatcher, 3, text_input_get_view(app->text_input));
+    view_dispatcher_add_view(app->vd, ViewSettings, text_input_get_view(app->text_input));
 
-    ai_agent_load_settings(app);
-
+    settings_load(app);
     return app;
 }
 
-static void ai_agent_app_free(AIAgentApp* app) {
-    ai_agent_ws_disconnect(app);
-
-    view_dispatcher_remove_view(app->view_dispatcher, 0);
-    view_dispatcher_remove_view(app->view_dispatcher, 1);
-    view_dispatcher_remove_view(app->view_dispatcher, 2);
-    view_dispatcher_remove_view(app->view_dispatcher, 3);
-
+static void app_free(AIApp* app) {
+    ws_disconnect(app);
+    view_dispatcher_remove_view(app->vd, ViewMenu);
+    view_dispatcher_remove_view(app->vd, ViewResult);
+    view_dispatcher_remove_view(app->vd, ViewLoading);
+    view_dispatcher_remove_view(app->vd, ViewSettings);
     submenu_free(app->menu);
     popup_free(app->popup);
     loading_free(app->loading);
     text_input_free(app->text_input);
-    view_dispatcher_free(app->view_dispatcher);
-
+    view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
     free(app);
 }
 
 int32_t ai_agent_app(void* p) {
     UNUSED(p);
-    AIAgentApp* app = ai_agent_app_alloc();
+    AIApp* app = app_alloc();
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, 0);
-    view_dispatcher_run(app->view_dispatcher);
+    /* Intentar autoconectar si ya hay IP configurada */
+    if(strlen(app->server_ip) > 7) {
+        ws_connect(app);
+        furi_delay_ms(800);
+    }
 
-    ai_agent_app_free(app);
+    view_dispatcher_switch_to_view(app->vd, ViewMenu);
+    view_dispatcher_run(app->vd);
+    app_free(app);
     return 0;
 }
